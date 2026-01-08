@@ -7,6 +7,7 @@ use Data::Dumper qw(Dumper);
 
 use Geo::LibProj::cs2cs;
 use Geo::LibProj::FFI;
+use PDL::Fit::Levmar;
 
 #============= read by <> ================
 
@@ -40,16 +41,18 @@ foreach my $ri (0 .. $#data) {
   }
 }
 
-# ---------- try to create transfer machine ----------
+# ---------- restore lat/lon ----------
 # my $cs2cs = Geo::LibProj::cs2cs->new("EPSG:25833" => "EPSG:4326");
 # my $cs2cs = Geo::LibProj::cs2cs->new("ESRI:54043" => "WGS 84");
 
+# regain CRS spec from point file
 my ($check_crs, $crs_wkt) = ( $WKT =~ /^(#CRS\: )(.*)$/  );
-
 die "cannot find starter in \$WKT string" unless $check_crs;
- 
+
+# setup transfer machine 
 my $cs2cs = Geo::LibProj::cs2cs->new($crs_wkt => "WGS 84");
 
+# restore lat/lon in %d_hash
 foreach my $dhv (values %d_hash) {
   my $point_in = [ $dhv->{mapX}, $dhv->{mapY} ];
   my $point_out = $cs2cs->transform( $point_in  ) ;
@@ -57,9 +60,7 @@ foreach my $dhv (values %d_hash) {
   $dhv->{lon} = $point_out->[1];
 }
 
-
-
-#======= debug out ===========
+#======= debug out for restore lat/lon  ===========
 
 print "\n";
 print $WKT;
@@ -68,6 +69,6 @@ print "\n";
 print Data::Dumper->Dump([\@labels, \@data, \%d_hash], 
                         [qw(\@labels \@data \%d_hash)]);
 
-
+# 
 
 
