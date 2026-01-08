@@ -94,7 +94,18 @@ printf "lat:    %f | %f | %f | %d \n",  $lat_min, $lat_avg, $lat_max , scalar @l
 printf "lon:    %f | %f | %f | %d \n",  $lon_min, $lon_avg, $lon_max , scalar @lon_list;
 print "\n";
 
+# try with equidistant conic projection
+# +proj=eqdc +lat_0=30 +lon_0=10 +lat_1=43 +lat_2=62 +x_0=0 +y_0=0 +ellps=intl +units=m +no_defs +type=crs
 
+my $proj_eqdc_template = '+proj=eqdc +lat_0=%f +lon_0=%f +lat_1=%f +lat_2=%f +ellps=intl +units=m +no_defs +type=crs';
+
+my $proj_eqdc_1st_est = sprintf $proj_eqdc_template, 
+   $lat_min, 
+   ($lon_min + $lon_max) / 2 , 
+   ($lat_min + $lat_avg) / 2,
+   ($lat_max + $lat_avg) / 2;
+
+print $proj_eqdc_1st_est, "\n";
 
 
 
