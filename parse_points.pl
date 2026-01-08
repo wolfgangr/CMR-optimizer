@@ -71,20 +71,7 @@ print Data::Dumper->Dump([\@labels, \@data, \%d_hash],
                         [qw(\@labels \@data \%d_hash)]);
 
 # ---- prepare for estimators and defaults ---------
-# find extent of points in lat/lon space 
-
-# my ($lat_min, $lat_max, $lat_sum, $lon_min, $lon_max, $lon_sum);
-# my $point_cnt=0;
-# foreach my $dhv (values %d_hash) {
-#   $point_cnt++;
-#   my $plat = $dhv->{lat};
-#   my $plon = $dhv->{lon};
-#   $lat_sum += $plat;
-#   $lon_sum += $plon;
-# }
-# die "no points found" unless $point_cnt;
-# my $lat_avg = $lat_sum / $point_cnt;
-# my $lon_avg = $lon_sum / $point_cnt;
+# requires List::Util
 
 my @lat_list = map { $_->{lat} } values %d_hash;
 my @lon_list = map { $_->{lon} } values %d_hash;
