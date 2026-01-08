@@ -10,6 +10,8 @@ use Geo::LibProj::cs2cs;
 use Geo::LibProj::FFI;
 use PDL::Fit::Levmar;
 
+my $CRS_lat_lon = "WGS 84";
+
 #============= read by <> ================
 
 my @data;
@@ -51,7 +53,7 @@ my ($check_crs, $crs_wkt) = ( $WKT =~ /^(#CRS\: )(.*)$/  );
 die "cannot find starter in \$WKT string" unless $check_crs;
 
 # setup transfer machine 
-my $cs2cs = Geo::LibProj::cs2cs->new($crs_wkt => "WGS 84");
+my $cs2cs = Geo::LibProj::cs2cs->new($crs_wkt => $CRS_lat_lon);
 
 # restore lat/lon in %d_hash
 foreach my $dhv (values %d_hash) {
@@ -94,7 +96,7 @@ printf "lat:    %f | %f | %f | %d \n",  $lat_min, $lat_avg, $lat_max , scalar @l
 printf "lon:    %f | %f | %f | %d \n",  $lon_min, $lon_avg, $lon_max , scalar @lon_list;
 print "\n";
 
-# try with equidistant conic projection
+# ---------- giv it a try with equidistant conic projection -----------
 # +proj=eqdc +lat_0=30 +lon_0=10 +lat_1=43 +lat_2=62 +x_0=0 +y_0=0 +ellps=intl +units=m +no_defs +type=crs
 
 my $proj_eqdc_template = '+proj=eqdc +lat_0=%f +lon_0=%f +lat_1=%f +lat_2=%f +ellps=intl +units=m +no_defs +type=crs';
@@ -107,5 +109,13 @@ my $proj_eqdc_1st_est = sprintf $proj_eqdc_template,
 
 print $proj_eqdc_1st_est, "\n";
 
+my $cs_1st_est = Geo::LibProj::cs2cs->new($CRS_lat_lon => $proj_eqdc_1st_est);
 
+foreach my $dhv (values %d_hash) {
+  my $r = $cs_1st_est->transform([($dhv->{lat}, $dhv->{lon}  ) ]);
+  $dhv->{est1X} = $r->[0];
+  $dhv->{est1Y} = $r->[1];
+}
+
+print Data::Dumper->Dump([\%d_hash], [qw(\%d_hash)]);
 
