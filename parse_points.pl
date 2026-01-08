@@ -42,7 +42,13 @@ foreach my $ri (0 .. $#data) {
 
 # ---------- try to create transfer machine ----------
 # my $cs2cs = Geo::LibProj::cs2cs->new("EPSG:25833" => "EPSG:4326");
-my $cs2cs = Geo::LibProj::cs2cs->new("ESRI:54043" => "WGS 84");
+# my $cs2cs = Geo::LibProj::cs2cs->new("ESRI:54043" => "WGS 84");
+
+my ($check_crs, $crs_wkt) = ( $WKT =~ /^(#CRS\: )(.*)$/  );
+
+die "cannot find starter in \$WKT string" unless $check_crs;
+ 
+my $cs2cs = Geo::LibProj::cs2cs->new($crs_wkt => "WGS 84");
 
 foreach my $dhv (values %d_hash) {
   my $point_in = [ $dhv->{mapX}, $dhv->{mapY} ];
