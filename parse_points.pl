@@ -5,6 +5,10 @@ use strict;
 
 use Data::Dumper qw(Dumper);
 
+use Geo::LibProj::cs2cs;
+use Geo::LibProj::FFI;
+
+
 my @data;
 my $WKT;
 
