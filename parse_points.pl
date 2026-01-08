@@ -119,3 +119,16 @@ foreach my $dhv (values %d_hash) {
 
 print Data::Dumper->Dump([\%d_hash], [qw(\%d_hash)]);
 
+# IDX lat lon sourceX sourceY mapX mapY est1X est1Y
+my @printfields = qw (IDX lat lon sourceX sourceY mapX mapY est1X est1Y);
+print join '|',  @printfields;
+print "\n";
+
+foreach my $k ( sort { $a <=> $b } keys %d_hash) {
+  my $dhv = $d_hash{$k};
+  foreach my $f (@printfields) {
+    print $dhv->{$f}, ' | '    ;
+  }
+  print "\n";
+}
+
