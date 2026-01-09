@@ -119,6 +119,7 @@ foreach my $dhv (values %d_hash) {
 }
 
 # --- collect statistics of 1st estimated value set
+#
 my @est1X_list = map { $_->{est1X} } values %d_hash;
 my @est1Y_list = map { $_->{est1Y} } values %d_hash;
 
@@ -138,6 +139,29 @@ printf "extent ( \tmin \tavg \tmax \tnum) \n";
 printf "est1X:    %f | %f | %f | %d \n",  $est1X_min, $est1X_avg, $est1X_max , scalar @est1X_list;
 printf "est1Y:    %f | %f | %f | %d \n",  $est1Y_min, $est1Y_avg, $est1Y_max , scalar @est1Y_list;
 print "\n";
+
+# --- collect statistics of match points in source raster
+#
+my @sourceX_list = map { $_->{sourceX} } values %d_hash;
+my @sourceY_list = map { $_->{sourceY} } values %d_hash;
+
+die "no source points found" unless @sourceX_list && @sourceY_list;
+die "source point number inconsistent" unless $#sourceX_list == $#sourceY_list;
+
+my $sourceX_min = min @sourceX_list;
+my $sourceX_max = max @sourceX_list;
+my $sourceX_avg = (sum @sourceX_list) / (scalar @sourceX_list);
+
+my $sourceY_min = min @sourceY_list;
+my $sourceY_max = max @sourceY_list;
+my $sourceY_avg = (sum @sourceY_list) / (scalar @sourceY_list);
+
+print "\n";
+printf "extent ( \tmin \tavg \tmax \tnum) \n";
+printf "sourceX:    %f | %f | %f | %d \n",  $sourceX_min, $sourceX_avg, $sourceX_max , scalar @sourceX_list;
+printf "sourceY:    %f | %f | %f | %d \n",  $sourceY_min, $sourceY_avg, $sourceY_max , scalar @sourceY_list;
+print "\n";
+
 
 die "### DEBUG ===";
 
