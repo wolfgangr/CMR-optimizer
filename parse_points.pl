@@ -103,20 +103,46 @@ my $proj_eqdc_template = '+proj=eqdc +lat_0=%f +lon_0=%f +lat_1=%f +lat_2=%f +el
 
 my $proj_eqdc_1st_est = sprintf $proj_eqdc_template, 
    $lat_min, 
-   ($lon_min + $lon_max) / 2 , 
-   ($lat_min + $lat_avg) / 2,
-   ($lat_max + $lat_avg) / 2;
+   ($lon_min + $lon_max) / 2 ,    #  central meridian in the middle
+   ($lat_min + $lat_avg) / 2,     #  1st parallel at 1st quartile
+   ($lat_max + $lat_avg) / 2;     #  2nd parallel at 3rd quartile
 
 print $proj_eqdc_1st_est, "\n";
 
 my $cs_1st_est = Geo::LibProj::cs2cs->new($CRS_lat_lon => $proj_eqdc_1st_est);
 
+# add 1st estimations to d_hash
 foreach my $dhv (values %d_hash) {
   my $r = $cs_1st_est->transform([($dhv->{lat}, $dhv->{lon}  ) ]);
   $dhv->{est1X} = $r->[0];
   $dhv->{est1Y} = $r->[1];
 }
 
+# --- collect statistics of 1st estimated value set
+my @est1X_list = map { $_->{est1X} } values %d_hash;
+my @est1Y_list = map { $_->{est1Y} } values %d_hash;
+
+die "no est points found" unless @est1X_list && @est1Y_list;
+die "est point number inconsistent" unless $#est1X_list == $#est1Y_list;
+
+my $est1X_min = min @est1X_list;
+my $est1X_max = max @est1X_list;
+my $est1X_avg = (sum @est1X_list) / (scalar @est1X_list);
+
+my $est1Y_min = min @est1Y_list;
+my $est1Y_max = max @est1Y_list;
+my $est1Y_avg = (sum @est1Y_list) / (scalar @est1Y_list);
+
+print "\n";
+printf "extent ( \tmin \tavg \tmax \tnum) \n";
+printf "est1X:    %f | %f | %f | %d \n",  $est1X_min, $est1X_avg, $est1X_max , scalar @est1X_list;
+printf "est1Y:    %f | %f | %f | %d \n",  $est1Y_min, $est1Y_avg, $est1Y_max , scalar @est1Y_list;
+print "\n";
+
+die "### DEBUG ===";
+
+# ========= debug of start value finding
+#
 print Data::Dumper->Dump([\%d_hash], [qw(\%d_hash)]);
 
 # IDX lat lon sourceX sourceY mapX mapY est1X est1Y
