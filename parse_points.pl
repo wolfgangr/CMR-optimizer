@@ -101,6 +101,7 @@ print "\n";
 
 my $proj_eqdc_template = '+proj=eqdc +lat_0=%f +lon_0=%f +lat_1=%f +lat_2=%f +ellps=intl +units=m +no_defs +type=crs';
 
+# 
 my $proj_eqdc_1st_est = sprintf $proj_eqdc_template, 
    $lat_min, 
    ($lon_min + $lon_max) / 2 ,    #  central meridian in the middle
@@ -161,6 +162,16 @@ printf "extent ( \tmin \tavg \tmax \tnum) \n";
 printf "sourceX:    %f | %f | %f | %d \n",  $sourceX_min, $sourceX_avg, $sourceX_max , scalar @sourceX_list;
 printf "sourceY:    %f | %f | %f | %d \n",  $sourceY_min, $sourceY_avg, $sourceY_max , scalar @sourceY_list;
 print "\n";
+
+# 1st estimates for Helmert Raster -> 1st est CRS
+my $scaleX = ($est1X_max - $est1X_min) /  ($sourceX_max - $sourceX_min) ;
+my $scaleY = ($est1X_max - $est1X_min) /  ($sourceX_max - $sourceX_min) ;
+my $scale2D = ($scaleX + $scaleY) / 2;
+my $shiftX = $est1X_avg - $scaleX * $sourceX_avg;
+my $shiftY = $est1Y_avg - $scaleY * $sourceY_avg;
+
+printf "\$scaleX: %f ; \$scaleY: %f ; \$scale2D: %f ; \$shiftX: %f ;  \$shiftY: %f ; \n",
+	$scaleX, $scaleY, $scale2D, $shiftX,  $shiftY;
 
 
 die "### DEBUG ===";
