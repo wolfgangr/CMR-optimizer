@@ -236,7 +236,18 @@ print $PDL_sourceXY_flat, "\n";
 
 # build levmar
 
-sub mydummy {  
+my $proj_pipline_rev = '+proj=pipeline +ellps=intl +units=m +no_defs';
+$proj_pipline_rev .= ' +step ';
+$proj_pipline_rev .= '+proj=eqdc +lat_0=%f +lon_0=%f +lat_1=%f +lat_2=%f';
+$proj_pipline_rev .= ' +inv';
+$proj_pipline_rev .= ' +step ';  
+$proj_pipline_rev .= '+proj=helmert x=%f y=%f  s=%f theta=%f';
+$proj_pipline_rev .= ' +inv';
+
+print $proj_pipline_rev, "\n";
+die " #### DEBUG ###";
+
+sub proj_rev_sub {  
   my ($p,$x,$t) = @_;
   print "===============debug in sub dummy =========\n";
   print 'P: ', $p, "\n";
@@ -250,7 +261,7 @@ my $levmar_result = levmar(
 	P => $par_est, 
 	X => $PDL_sourceXY_flat,
 	T => $PDL_lon_lat_flat,
-	FUNC => sub { mydummy(@_) }
+	FUNC => sub { proj_rev_sub(@_) }
         # FUNC => &mydummy,
 	# FIX => $FIX
   );
