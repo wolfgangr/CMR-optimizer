@@ -237,25 +237,19 @@ print $PDL_sourceXY_flat, "\n";
 # build levmar
 
 sub dummy {  
-# my $dummy = levmar( FUNC => {
-  # my ($p,$x,$t) = @_;
+  my ($p,$x,$t) = @_;
   print "===============debug in sub dummy =========\n";
-  # print 'P: ', $p, "\n";
-  # print 'X: ', $x, "\n";
-  # print 'T: ', $t, "\n";
+  print 'P: ', $p, "\n";
+  print 'X: ', $x, "\n";
+  print 'T: ', $t, "\n";
 
-} # ); 
+}  
 
 my $levmar_result = levmar(
 	P => $par_est, 
 	X => $PDL_sourceXY_flat,
 	T => $PDL_lon_lat_flat,
 	FUNC => sub { dummy(@_) }
-	# FUNC => &dummy,
-	# FUNC => &dummy,
-#	FUNC => sub {
-#  0 ;
-# }
 	# FIX => $FIX
   );
 
