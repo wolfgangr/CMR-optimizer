@@ -221,6 +221,8 @@ my $PDL_sourceXY =  pdl ( zip (\@sourceX_list, \@sourceY_list ));
 
 print $par_est, "\n";
 print $PDL_lon_lat, "\n";
+print $PDL_lon_lat->clump(2), "\n";
 print $PDL_sourceXY, "\n";
+print $PDL_sourceXY->clump(2), "\n";
 
 
