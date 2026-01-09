@@ -8,7 +8,12 @@ use List::Util qw(min max sum);
 
 use Geo::LibProj::cs2cs;
 use Geo::LibProj::FFI;
+
+# see https://metacpan.org/pod/PDL::Fit::Levmar#example-1
+# use PDL::LiteF;
+use PDL::Lite;
 use PDL::Fit::Levmar;
+use PDL::NiceSlice;
 
 my $CRS_lat_lon = "WGS 84";
 
@@ -102,11 +107,20 @@ print "\n";
 my $proj_eqdc_template = '+proj=eqdc +lat_0=%f +lon_0=%f +lat_1=%f +lat_2=%f +ellps=intl +units=m +no_defs +type=crs';
 
 # 
-my $proj_eqdc_1st_est = sprintf $proj_eqdc_template, 
-   $lat_min, 
-   ($lon_min + $lon_max) / 2 ,    #  central meridian in the middle
-   ($lat_min + $lat_avg) / 2,     #  1st parallel at 1st quartile
-   ($lat_max + $lat_avg) / 2;     #  2nd parallel at 3rd quartile
+
+my $est_lon_0 = ($lon_min + $lon_max) / 2 ;    #  central meridian in the middle
+my $est_lat_0 =  $lat_min;  
+my $est_lat_1 = ($lat_min + $lat_avg) / 2 ;     #  1st parallel at 1st quartile
+my $est_lat_2 = ($lat_max + $lat_avg) / 2 ;     #  2nd parallel at 3rd quartile
+my @estimates = ($est_lat_0, $est_lon_0, $est_lat_1, $est_lat_2);
+
+my $proj_eqdc_1st_est = sprintf $proj_eqdc_template, @estimates;
+#  $est_lat_0, $est_lon_0, $est_lat_1, $est_lat_2 ;
+
+#    $lat_min, 
+#    ($lon_min + $lon_max) / 2 ,    #  central meridian in the middle
+#    ($lat_min + $lat_avg) / 2,     #  1st parallel at 1st quartile
+#    ($lat_max + $lat_avg) / 2;     #  2nd parallel at 3rd quartile
 
 print $proj_eqdc_1st_est, "\n";
 
@@ -170,14 +184,18 @@ my $scale2D = ($scaleX + $scaleY) / 2;
 my $shiftX = $est1X_avg - $scaleX * $sourceX_avg;
 my $shiftY = $est1Y_avg - $scaleY * $sourceY_avg;
 
+my @est_helmert = ($shiftX, $shiftY, $scale2D); # for building param PDL
+
 printf "\$scaleX: %f ; \$scaleY: %f ; \$scale2D: %f ; \$shiftX: %f ;  \$shiftY: %f ; \n",
 	$scaleX, $scaleY, $scale2D, $shiftX,  $shiftY;
 
 
-die "### DEBUG ===";
+# die "### DEBUG ===";
 
 # ========= debug of start value finding
 #
+
+goto EODEBUG1;
 print Data::Dumper->Dump([\%d_hash], [qw(\%d_hash)]);
 
 # IDX lat lon sourceX sourceY mapX mapY est1X est1Y
@@ -192,4 +210,12 @@ foreach my $k ( sort { $a <=> $b } keys %d_hash) {
   }
   print "\n";
 }
+EODEBUG1:
+
+# ======== prepare PDLs for Levmar ==============================
+
+# my $par_est = pdl [ 1,2,3 ]; # [( @est_helmert, @estimates )] ;
+my $par_est = pdl [  (@est_helmert, @estimates) ] ;
+print $par_est;
+print "\n";
 
