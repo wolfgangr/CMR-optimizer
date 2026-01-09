@@ -4,7 +4,7 @@ use warnings;
 use strict;
 
 use Data::Dumper qw(Dumper);
-use List::Util qw(min max sum);
+use List::Util qw(min max sum zip);
 
 use Geo::LibProj::cs2cs;
 use Geo::LibProj::FFI;
@@ -216,6 +216,11 @@ EODEBUG1:
 
 # my $par_est = pdl [ 1,2,3 ]; # [( @est_helmert, @estimates )] ;
 my $par_est = pdl [  (@est_helmert, @estimates) ] ;
-print $par_est;
-print "\n";
+my $PDL_lon_lat  =  pdl ( zip (\@lon_list,     \@lat_list ) );
+my $PDL_sourceXY =  pdl ( zip (\@sourceX_list, \@sourceY_list ));
+
+print $par_est, "\n";
+print $PDL_lon_lat, "\n";
+print $PDL_sourceXY, "\n";
+
 
