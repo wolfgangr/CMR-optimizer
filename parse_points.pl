@@ -38,10 +38,11 @@ while (<>) {
 #========= process ===========
 
 my @labels = @{shift @data};
+my @rownums = (0 .. $#data);
 
 # arrange data in hash by row# and column label
 my %d_hash;
-foreach my $ri (0 .. $#data) {
+foreach my $ri (@rownums) {
   my @dr = @{$data[$ri]};
   foreach my $ci (0 .. $#labels) {
     $d_hash{$ri}{$labels[$ci]}=$dr[$ci];
@@ -80,8 +81,11 @@ print Data::Dumper->Dump([\@labels, \@data, \%d_hash],
 # ---- prepare for estimators and defaults ---------
 # requires List::Util
 
-my @lat_list = map { $_->{lat} } values %d_hash;
-my @lon_list = map { $_->{lon} } values %d_hash;
+# my @lat_list = map { $_->{lat} } values %d_hash;
+my @d_sorted = map { $d_hash{$_} } @rownums;
+
+my @lat_list = map { $_->{lat} } @d_sorted; #  map { $d_hash{$_} } @rownums;
+my @lon_list = map { $_->{lon} } @d_sorted; # map { $d_hash{$_} } @rownums; #  values %d_hash;
 
 die "no points processed" unless @lat_list && @lon_list;
 die "point number inconsistent" unless $#lat_list == $#lon_list; 
@@ -135,8 +139,8 @@ foreach my $dhv (values %d_hash) {
 
 # --- collect statistics of 1st estimated value set
 #
-my @est1X_list = map { $_->{est1X} } values %d_hash;
-my @est1Y_list = map { $_->{est1Y} } values %d_hash;
+my @est1X_list = map { $_->{est1X} } @d_sorted; # values %d_hash;
+my @est1Y_list = map { $_->{est1Y} } @d_sorted; # values %d_hash;
 
 die "no est points found" unless @est1X_list && @est1Y_list;
 die "est point number inconsistent" unless $#est1X_list == $#est1Y_list;
@@ -157,8 +161,8 @@ print "\n";
 
 # --- collect statistics of match points in source raster
 #
-my @sourceX_list = map { $_->{sourceX} } values %d_hash;
-my @sourceY_list = map { $_->{sourceY} } values %d_hash;
+my @sourceX_list = map { $_->{sourceX} } @d_sorted; # values %d_hash;
+my @sourceY_list = map { $_->{sourceY} } @d_sorted; # values %d_hash;
 
 die "no source points found" unless @sourceX_list && @sourceY_list;
 die "source point number inconsistent" unless $#sourceX_list == $#sourceY_list;
