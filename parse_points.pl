@@ -187,8 +187,8 @@ my $scaleY = ($est1X_max - $est1X_min) /  ($sourceX_max - $sourceX_min) ;
 my $scale2D = ($scaleX + $scaleY) / 2;
 my $shiftX = $est1X_avg - $scaleX * $sourceX_avg;
 my $shiftY = $est1Y_avg - $scaleY * $sourceY_avg;
-
-my @est_helmert = ($shiftX, $shiftY, $scale2D); # for building param PDL
+my $rot =0;  # keep this for possible extension
+my @est_helmert = ($shiftX, $shiftY, $scale2D, $rot ); # for building param PDL
 
 printf "\$scaleX: %f ; \$scaleY: %f ; \$scale2D: %f ; \$shiftX: %f ;  \$shiftY: %f ; \n",
 	$scaleX, $scaleY, $scale2D, $shiftX,  $shiftY;
@@ -220,10 +220,12 @@ EODEBUG1:
 
 # my $par_est = pdl [ 1,2,3 ]; # [( @est_helmert, @estimates )] ;
 my $par_est = pdl [  (@est_helmert, @estimates) ] ;
+my $FIX = pdl  qw(0 0 0 1 0 0 0 0) ; # keep helmert rotation fixed
 my $PDL_lon_lat  =  pdl ( zip (\@lon_list,     \@lat_list ) );
 my $PDL_sourceXY =  pdl ( zip (\@sourceX_list, \@sourceY_list ));
 
 print $par_est, "\n";
+print $FIX, "\n";
 print $PDL_lon_lat, "\n";
 print $PDL_lon_lat->clump(2), "\n";
 print $PDL_sourceXY, "\n";
