@@ -51,8 +51,6 @@ foreach my $ri (@rownums) {
 }
 
 # ---------- restore lat/lon ----------
-# my $cs2cs = Geo::LibProj::cs2cs->new("EPSG:25833" => "EPSG:4326");
-# my $cs2cs = Geo::LibProj::cs2cs->new("ESRI:54043" => "WGS 84");
 
 # regain CRS spec from point file
 my ($check_crs, $crs_wkt) = ( $WKT =~ /^(#CRS\: )(.*)$/  );
@@ -70,13 +68,15 @@ foreach my $dhv (values %d_hash) {
 }
 
 #======= debug out for restore lat/lon  ===========
-
+goto EODEBUG_WKT;
 print "\n";
 print $WKT;
-print "\n";
 
+goto EODEBUG_WKT;
+print "\n";
 print Data::Dumper->Dump([\@labels, \@data, \%d_hash], 
                         [qw(\@labels \@data \%d_hash)]);
+EODEBUG_WKT:
 
 # ---- prepare for estimators and defaults ---------
 # requires List::Util
@@ -105,7 +105,7 @@ printf "lat:    %f | %f | %f | %d \n",  $lat_min, $lat_avg, $lat_max , scalar @l
 printf "lon:    %f | %f | %f | %d \n",  $lon_min, $lon_avg, $lon_max , scalar @lon_list;
 print "\n";
 
-# ---------- giv it a try with equidistant conic projection -----------
+# ---------- give it a try with equidistant conic projection -----------
 # +proj=eqdc +lat_0=30 +lon_0=10 +lat_1=43 +lat_2=62 +x_0=0 +y_0=0 +ellps=intl +units=m +no_defs +type=crs
 
 my $proj_eqdc_template = '+proj=eqdc +lat_0=%f +lon_0=%f +lat_1=%f +lat_2=%f +ellps=intl +units=m +no_defs +type=crs';
@@ -113,19 +113,13 @@ my $proj_eqdc_template = '+proj=eqdc +lat_0=%f +lon_0=%f +lat_1=%f +lat_2=%f +el
 # 
 
 my $est_lon_0 = ($lon_min + $lon_max) / 2 ;    #  central meridian in the middle
-my $est_lat_0 =  $lat_min;  
+# if lat_0 is where our Y is 0, this is collinear to helmert shift y?
+my $est_lat_0 =  $lat_min; 	 
 my $est_lat_1 = ($lat_min + $lat_avg) / 2 ;     #  1st parallel at 1st quartile
 my $est_lat_2 = ($lat_max + $lat_avg) / 2 ;     #  2nd parallel at 3rd quartile
 my @estimates = ($est_lat_0, $est_lon_0, $est_lat_1, $est_lat_2);
 
 my $proj_eqdc_1st_est = sprintf $proj_eqdc_template, @estimates;
-#  $est_lat_0, $est_lon_0, $est_lat_1, $est_lat_2 ;
-
-#    $lat_min, 
-#    ($lon_min + $lon_max) / 2 ,    #  central meridian in the middle
-#    ($lat_min + $lat_avg) / 2,     #  1st parallel at 1st quartile
-#    ($lat_max + $lat_avg) / 2;     #  2nd parallel at 3rd quartile
-
 print $proj_eqdc_1st_est, "\n";
 
 my $cs_1st_est = Geo::LibProj::cs2cs->new($CRS_lat_lon => $proj_eqdc_1st_est);
@@ -194,9 +188,7 @@ my @est_helmert = ($shiftX, $shiftY, $scale2D, $rot ); # for building param PDL
 printf "\$scaleX: %f ; \$scaleY: %f ; \$scale2D: %f ; \$shiftX: %f ;  \$shiftY: %f ; \n",
 	$scaleX, $scaleY, $scale2D, $shiftX,  $shiftY;
 
-
 # die "### DEBUG ===";
-
 # ========= debug of start value finding
 #
 
