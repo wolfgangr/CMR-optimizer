@@ -243,9 +243,8 @@ sub proj_laea_sub {
   # print "===============debug in sub dummy =========\n";
   print 'P: ', $p, "\n";
   my ($dx, $dy, $scale, $rot, $lat0, $lon0) = list $p;
-  # $rot +=3; # ### TBD --- remove ... testin gonyl !!!!!!!!!!
   my $phi =  $rot * PI / 180; 
-  # my $phi=0;
+  my $phi=0;  # #### TBDeleted ####
  
   my $ps = sprintf $proj_pipeline, 
     $lat0, $lon0 ; # , $lat1, $lat2; 
@@ -253,44 +252,30 @@ sub proj_laea_sub {
 
   my $cs_src = Geo::LibProj::cs2cs->new($CRS_lat_lon => $ps);
   my @inp = List::Util::pairmap { [$b , $a  ] }  $t->list;  # $T is lon_lat ! 
-  # print scalar @inp;
-  # print ' | @inp: ', Dumper(\@inp);
-  # my @r = $cs_src-> transform( @inp );
   my $r_pdl = pdl ( $cs_src-> transform( @inp ) );
-  # my @r =(); # dummy to be removed
-  # my $r_pdl = pdl @r;
-  $r_pdl = $r_pdl(0:1); # 
-  # print $r_pdl;
+  $r_pdl = $r_pdl(0:1); # remove 3rd column with zeroes 
 
   # do inverse helmert in PDL
   my $rot_pdl =  pdl [[ cos($phi), sin($phi) ],[ -sin($phi), cos($phi)]] ;
   $rot_pdl *= $scale;
-  # print $rot_pdl;
 
   my $shift_pdl = pdl [ $dx, $dy ];
-  # print $shift_pdl;
   $r_pdl -= $shift_pdl;
-  # print $r_pdl;
 
   $r_pdl .= $r_pdl x $rot_pdl->inv ;
   # print $r_pdl;
 
-  # apply my own reverse helmert and flatten list
-  # my @rr = map { (
-  #   ($$_[0] - $dx) / $scale,
-  #   ($$_[1] - $dy) / $scale 
-  #       ) } @r;
-  # $x .= [ @rr ];
+  # result to caller
   $x .= $r_pdl->clump(2);
+
   if (0) {
     print 't: ', $t, "\n";
     print 'x: ', $x, "\n";
-    # print '@r: ', Dumper(\@r);
-    # print '@rr: ', Dumper(\@rr);
   }
 
 }  
 
+# perform match
 my $levmar_result = levmar(
 	P => $par_est, 
 	X => $PDL_sourceXY_flat,
