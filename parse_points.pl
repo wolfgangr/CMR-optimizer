@@ -266,19 +266,24 @@ sub proj_rev_sub {
   print $ps, "\n";
 
   my $cs_src = Geo::LibProj::cs2cs->new($CRS_lat_lon => $ps);
-  my @inp = List::Util::pairmap { [$b , $a  ] }  $t->list;  # $x->splitdim(0,2)->list ;
+  my @inp = List::Util::pairmap { [$b , $a  ] }  $t->list;  # $T is lon_lat ! 
   print scalar @inp;
   print ' | @inp: ', Dumper(\@inp);
   my @r = $cs_src-> transform( @inp );
-
-  # die " #### DEBUG ###";
-  # print " #### DEBUG ###";
-  # exit;
+  # apply my own reverse helmert and flatten list
+  # $x .= map { (
+  my @rr = map { (
+    ($$_[0] - $dx) / $scale,
+    ($$_[1] - $dy) / $scale 
+         ) } @r;
+  $x .= [ @rr ];
 ####==================~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~------------------------
-  print 'X: ', $x, "\n";
-  print 'X: ', $x->splitdim(0,2), "\n";
-  print 'T: ', $t->splitdim(0,2), "\n";
+  print 't: ', $t, "\n";
+  print 'x: ', $x, "\n";
+  # print 'X: ', $x->splitdim(0,2), "\n";
+  # print 'T: ', $t->splitdim(0,2), "\n";
   print '@r: ', Dumper(\@r);
+  print '@rr: ', Dumper(\@rr);
 
 }  
 
@@ -287,9 +292,6 @@ my $levmar_result = levmar(
 	X => $PDL_sourceXY_flat,
 	T => $PDL_lon_lat_flat,
 	FUNC =>  \&proj_rev_sub 
-	# FUNC => sub { proj_rev_sub(@_) }
-        # FUNC => &mydummy,
-	# FIX => $FIX
   );
 
 print levmar_report($levmar_result);
