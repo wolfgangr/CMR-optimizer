@@ -248,6 +248,13 @@ sub proj_rev_sub {
   # print 'P: ', $p, "\n";
   my ($dx, $dy, $scale, $rot, $lat0, $lon0, $lat1, $lat2) = list $p;
   $rot = 0; # crude hack since FIXED is not implemented
+  
+  $lat1 = min ( $lat1, 90);
+  $lat2 = min ( $lat2, 90);
+  $lat1 = max ( $lat1, -90);
+  $lat2 = max ( $lat2, -90);
+
+
   my $ps = sprintf $proj_pipline_rev, 
     $lat0, $lon0, $lat1, $lat2; 
   print $ps, "\n";
