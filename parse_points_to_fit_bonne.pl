@@ -108,7 +108,7 @@ print "\n";
 
 # ---------- give it a try with lambert azimutal equal area  -----------
 
-my $proj_laea_template = '+proj=laea +lat_0=%f +lon_0=%f +ellps=WGS84 +units=m +no_defs +type=crs';
+my $proj_bonne_template = '+proj=bonne +lat_1=%f +lon_0=%f +ellps=WGS84 +units=m +no_defs +type=crs';
 
 # 
 
@@ -119,10 +119,10 @@ my $est_lat_0 =  ($lat_min + $lat_max) / 2;
 # my $est_lat_2 = ($lat_max + $lat_avg) / 2 ;     #  2nd parallel at 3rd quartile
 my @estimates = ($est_lat_0, $est_lon_0);
 
-my $proj_laea_1st_est = sprintf $proj_laea_template, @estimates;
-print $proj_laea_1st_est, "\n";
+my $proj_bonne_1st_est = sprintf $proj_bonne_template, @estimates;
+print $proj_bonne_1st_est, "\n";
 
-my $cs_1st_est = Geo::LibProj::cs2cs->new($CRS_lat_lon => $proj_laea_1st_est);
+my $cs_1st_est = Geo::LibProj::cs2cs->new($CRS_lat_lon => $proj_bonne_1st_est);
 
 # die "~~~~ DEBUG ~~~~";
 
@@ -233,18 +233,18 @@ print $PDL_sourceXY_flat, "\n";
 # $proj_pipline_rev .= '+proj=eqdc +lat_0=%f +lon_0=%f +lat_1=%f +lat_2=%f';
 # $proj_pipline_rev .= ' +ellps=intl +units=m +no_defs';
 
-my $proj_pipeline = $proj_laea_template;
+my $proj_pipeline = $proj_bonne_template;
 
 print $proj_pipeline, "\n";
 # die " #### DEBUG ###";
 
-sub proj_laea_sub {  
+sub proj_bonne_sub {  
   my ($p,$x,$t) = @_;
   # print "===============debug in sub dummy =========\n";
   print 'P: ', $p, "\n";
   my ($dx, $dy, $scale, $rot, $lat0, $lon0) = list $p;
   my $phi =  $rot * PI / 180; 
-  my $phi=0;  # #### TBDeleted ####
+  # $phi=0;  # #### TBDeleted ####
  
   my $ps = sprintf $proj_pipeline, 
     $lat0, $lon0 ; # , $lat1, $lat2; 
@@ -280,7 +280,7 @@ my $levmar_result = levmar(
 	P => $par_est, 
 	X => $PDL_sourceXY_flat,
 	T => $PDL_lon_lat_flat,
-	FUNC =>  \&proj_laea_sub,
+	FUNC =>  \&proj_bonne_sub,
 	# MAXITS => 300, 
   );
 
