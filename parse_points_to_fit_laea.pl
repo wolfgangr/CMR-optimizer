@@ -189,7 +189,7 @@ my @est_helmert = ($shiftX, $shiftY, $scale2D, $rot ); # for building param PDL
 printf "\$scaleX: %f ; \$scaleY: %f ; \$scale2D: %f ; \$shiftX: %f ;  \$shiftY: %f ; \n",
 	$scaleX, $scaleY, $scale2D, $shiftX,  $shiftY;
 
-die "### DEBUG ===";
+# die "### DEBUG ===";
 # ========= debug of start value finding
 #
 
@@ -210,46 +210,48 @@ foreach my $k ( sort { $a <=> $b } keys %d_hash) {
 }
 EODEBUG1:
 
-# ======== prepare PDLs for Levmar ==============================
+# ======== prepare PDLs for levmar ==============================
 
 # my $par_est = pdl [ 1,2,3 ]; # [( @est_helmert, @estimates )] ;
 my $par_est = pdl [  (@est_helmert, @estimates) ] ;
-my $FIX = pdl  qw(0 0 0 1 0 0 0 0) ; # keep helmert rotation fixed
+# my $FIX = pdl  qw(0 0 0 1 0 0 0 0) ; # keep helmert rotation fixed
 my $PDL_lon_lat  =  pdl ( zip (\@lon_list,     \@lat_list ) );
 my $PDL_lon_lat_flat = $PDL_lon_lat->clump(2);
 my $PDL_sourceXY =  pdl ( zip (\@sourceX_list, \@sourceY_list ));
 my $PDL_sourceXY_flat = $PDL_sourceXY->clump(2);
 
 print $par_est, "\n";
-print $FIX, "\n";
+# print $FIX, "\n";
 print $PDL_lon_lat, "\n";
 print $PDL_lon_lat_flat, "\n";
 print $PDL_sourceXY, "\n";
 print $PDL_sourceXY_flat, "\n";
 
 # build levmar
-my $proj_pipline_rev = '';
-$proj_pipline_rev .= '+proj=eqdc +lat_0=%f +lon_0=%f +lat_1=%f +lat_2=%f';
-$proj_pipline_rev .= ' +ellps=intl +units=m +no_defs';
+# my $proj_pipline_rev = '';
+# $proj_pipline_rev .= '+proj=eqdc +lat_0=%f +lon_0=%f +lat_1=%f +lat_2=%f';
+# $proj_pipline_rev .= ' +ellps=intl +units=m +no_defs';
 
-print $proj_pipline_rev, "\n";
+my $proj_pipeline = $proj_laea_template;
+
+print $proj_pipeline, "\n";
 # die " #### DEBUG ###";
 
-sub proj_rev_sub {  
+sub proj_laea_sub {  
   my ($p,$x,$t) = @_;
   # print "===============debug in sub dummy =========\n";
   # print 'P: ', $p, "\n";
-  my ($dx, $dy, $scale, $rot, $lat0, $lon0, $lat1, $lat2) = list $p;
-  $rot = 0; # crude hack since FIXED is not implemented
+  my ($dx, $dy, $scale, $rot, $lat0, $lon0) = list $p;
+  # $rot = 0; # crude hack since FIXED is not implemented
   
-  $lat1 = min ( $lat1, 90);
-  $lat2 = min ( $lat2, 90);
-  $lat1 = max ( $lat1, -90);
-  $lat2 = max ( $lat2, -90);
+  # $lat1 = min ( $lat1, 90);
+  # $lat2 = min ( $lat2, 90);
+  # $lat1 = max ( $lat1, -90);
+  # $lat2 = max ( $lat2, -90);
 
 
-  my $ps = sprintf $proj_pipline_rev, 
-    $lat0, $lon0, $lat1, $lat2; 
+  my $ps = sprintf $proj_pipeline, 
+    $lat0, $lon0 ; # , $lat1, $lat2; 
   print $ps, "\n";
 
   my $cs_src = Geo::LibProj::cs2cs->new($CRS_lat_lon => $ps);
@@ -263,7 +265,7 @@ sub proj_rev_sub {
     ($$_[1] - $dy) / $scale 
          ) } @r;
   $x .= [ @rr ];
-  if (0) {
+  if (1) {
     print 't: ', $t, "\n";
     print 'x: ', $x, "\n";
     print '@r: ', Dumper(\@r);
@@ -276,7 +278,7 @@ my $levmar_result = levmar(
 	P => $par_est, 
 	X => $PDL_sourceXY_flat,
 	T => $PDL_lon_lat_flat,
-	FUNC =>  \&proj_rev_sub 
+	FUNC =>  \&proj_laea_sub 
   );
 
 print levmar_report($levmar_result);
