@@ -187,9 +187,9 @@ my $scaleY = ($est1X_max - $est1X_min) /  ($sourceX_max - $sourceX_min) ;
 my $scale2D = ($scaleX + $scaleY) / 2;
 my $shiftX = $est1X_avg - $scaleX * $sourceX_avg;
 my $shiftY = $est1Y_avg - $scaleY * $sourceY_avg;
-# my $rot =0;  # keep this for possible extension
-# my @est_helmert = ($shiftX, $shiftY, $scale2D, $rot ); # for building param PDL
-my @est_helmert = ($shiftX, $shiftY, $scale2D); # ... not built with lapack
+my $rot =0;  # keep this for possible extension
+my @est_helmert = ($shiftX, $shiftY, $scale2D, $rot ); # for building param PDL
+# my @est_helmert = ($shiftX, $shiftY, $scale2D); # ... not built with lapack
 
 printf "\$scaleX: %f ; \$scaleY: %f ; \$scale2D: %f ; \$shiftX: %f ;  \$shiftY: %f ; \n",
 	$scaleX, $scaleY, $scale2D, $shiftX,  $shiftY;
@@ -245,12 +245,22 @@ $proj_pipline_rev .= '+proj=helmert x=%f y=%f  s=%f theta=%f';
 $proj_pipline_rev .= ' +inv';
 
 print $proj_pipline_rev, "\n";
-die " #### DEBUG ###";
+# die " #### DEBUG ###";
 
 sub proj_rev_sub {  
   my ($p,$x,$t) = @_;
   print "===============debug in sub dummy =========\n";
   print 'P: ', $p, "\n";
+  my ($dx, $dy, $scale, $rot, $lat0, $lon0, $lat1, $lat2) = list $p;
+  $rot = 0; # crude hack since FIXED is not implemented
+  my $ps = sprintf $proj_pipline_rev, 
+    $lat0, $lon0, $lat1, $lat2, $dx, $dy, $scale, $rot;
+  print $ps, "\n";
+
+  die " #### DEBUG ###";
+  # print " #### DEBUG ###";
+  # exit;
+####==================~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~------------------------
   print 'X: ', $x, "\n";
   print 'X: ', $x->splitdim(0,2), "\n";
   print 'T: ', $t->splitdim(0,2), "\n";
@@ -261,7 +271,8 @@ my $levmar_result = levmar(
 	P => $par_est, 
 	X => $PDL_sourceXY_flat,
 	T => $PDL_lon_lat_flat,
-	FUNC => sub { proj_rev_sub(@_) }
+	FUNC =>  \&proj_rev_sub 
+	# FUNC => sub { proj_rev_sub(@_) }
         # FUNC => &mydummy,
 	# FIX => $FIX
   );
