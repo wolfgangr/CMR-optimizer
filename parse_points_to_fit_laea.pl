@@ -14,6 +14,7 @@ use Geo::LibProj::FFI;
 use PDL::Lite;
 use PDL::Fit::Levmar;
 use PDL::NiceSlice;
+use constant PI    => 4 * atan2(1, 1);
 
 my $CRS_lat_lon = "WGS 84";
 
@@ -240,16 +241,11 @@ print $proj_pipeline, "\n";
 sub proj_laea_sub {  
   my ($p,$x,$t) = @_;
   # print "===============debug in sub dummy =========\n";
-  # print 'P: ', $p, "\n";
+  print 'P: ', $p, "\n";
   my ($dx, $dy, $scale, $rot, $lat0, $lon0) = list $p;
-  # $rot = 0; # crude hack since FIXED is not implemented
-  
-  # $lat1 = min ( $lat1, 90);
-  # $lat2 = min ( $lat2, 90);
-  # $lat1 = max ( $lat1, -90);
-  # $lat2 = max ( $lat2, -90);
-
-
+  # $rot +=3; # ### TBD --- remove ... testin gonyl !!!!!!!!!!
+  my $phi =  $rot * PI / 180; 
+ 
   my $ps = sprintf $proj_pipeline, 
     $lat0, $lon0 ; # , $lat1, $lat2; 
   print $ps, "\n";
@@ -258,14 +254,33 @@ sub proj_laea_sub {
   my @inp = List::Util::pairmap { [$b , $a  ] }  $t->list;  # $T is lon_lat ! 
   # print scalar @inp;
   # print ' | @inp: ', Dumper(\@inp);
-  my @r = $cs_src-> transform( @inp );
+  # my @r = $cs_src-> transform( @inp );
+  my $r_pdl = pdl ( $cs_src-> transform( @inp ) );
+  my @r =(); # dummy to be removed
+  # my $r_pdl = pdl @r;
+  $r_pdl = $r_pdl(0:1); # 
+  print $r_pdl;
+
+  # do inverse helmert in PDL
+  my $rot_pdl =  pdl [[ cos($phi), sin($phi) ],[ -sin($phi), cos($phi)]] ;
+  $rot_pdl *= $scale;
+  print $rot_pdl;
+
+  my $shift_pdl = pdl [ $dx, $dy ];
+  print $shift_pdl;
+  $r_pdl -= $shift_pdl;
+  print $r_pdl;
+
+  $r_pdl .= $r_pdl x $rot_pdl->inv ;
+  print $r_pdl;
+
   # apply my own reverse helmert and flatten list
   my @rr = map { (
     ($$_[0] - $dx) / $scale,
     ($$_[1] - $dy) / $scale 
          ) } @r;
-  $x .= [ @rr ];
-  if (1) {
+  # $x .= [ @rr ];
+  if (0) {
     print 't: ', $t, "\n";
     print 'x: ', $x, "\n";
     print '@r: ', Dumper(\@r);
