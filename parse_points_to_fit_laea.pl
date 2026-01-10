@@ -245,6 +245,7 @@ sub proj_laea_sub {
   my ($dx, $dy, $scale, $rot, $lat0, $lon0) = list $p;
   # $rot +=3; # ### TBD --- remove ... testin gonyl !!!!!!!!!!
   my $phi =  $rot * PI / 180; 
+  # my $phi=0;
  
   my $ps = sprintf $proj_pipeline, 
     $lat0, $lon0 ; # , $lat1, $lat2; 
@@ -272,7 +273,7 @@ sub proj_laea_sub {
   # print $r_pdl;
 
   $r_pdl .= $r_pdl x $rot_pdl->inv ;
-  print $r_pdl;
+  # print $r_pdl;
 
   # apply my own reverse helmert and flatten list
   # my @rr = map { (
@@ -280,6 +281,7 @@ sub proj_laea_sub {
   #   ($$_[1] - $dy) / $scale 
   #       ) } @r;
   # $x .= [ @rr ];
+  $x .= $r_pdl->clump(2);
   if (0) {
     print 't: ', $t, "\n";
     print 'x: ', $x, "\n";
@@ -293,7 +295,8 @@ my $levmar_result = levmar(
 	P => $par_est, 
 	X => $PDL_sourceXY_flat,
 	T => $PDL_lon_lat_flat,
-	FUNC =>  \&proj_laea_sub 
+	FUNC =>  \&proj_laea_sub,
+	# MAXITS => 300, 
   );
 
 print levmar_report($levmar_result);
