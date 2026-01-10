@@ -236,54 +236,39 @@ print $PDL_sourceXY_flat, "\n";
 
 # build levmar
 my $proj_pipline_rev = '';
-# my $proj_pipline_rev = '+proj=pipeline'; +# ellps=intl +units=m +no_defs';
-# $proj_pipline_rev .= ' +step ';
-# $proj_pipline_rev .= '+proj=helmert x=%f y=%f  s=%f theta=%f';
-# $proj_pipline_rev .= '  +units=m';
-# $proj_pipline_rev .= ' convention=coordinate_frame';
-# $proj_pipline_rev .= '+proj=eqdc +lat_0=%f +lon_0=%f +lat_1=%f +lat_2=%f';
-# $proj_pipline_rev .= ' +inv';
-# $proj_pipline_rev .= ' +step +proj=unitconvert +xy_in=m +xy_out=1 ';
-
-# $proj_pipline_rev .= ' +step ';  
 $proj_pipline_rev .= '+proj=eqdc +lat_0=%f +lon_0=%f +lat_1=%f +lat_2=%f';
 $proj_pipline_rev .= ' +ellps=intl +units=m +no_defs';
-# $proj_pipline_rev .= '+proj=helmert x=%f y=%f  s=%f theta=%f';
-# $proj_pipline_rev .= ' +inv';
 
 print $proj_pipline_rev, "\n";
 # die " #### DEBUG ###";
 
 sub proj_rev_sub {  
   my ($p,$x,$t) = @_;
-  print "===============debug in sub dummy =========\n";
-  print 'P: ', $p, "\n";
+  # print "===============debug in sub dummy =========\n";
+  # print 'P: ', $p, "\n";
   my ($dx, $dy, $scale, $rot, $lat0, $lon0, $lat1, $lat2) = list $p;
   $rot = 0; # crude hack since FIXED is not implemented
   my $ps = sprintf $proj_pipline_rev, 
-    $lat0, $lon0, $lat1, $lat2; # $dx, $dy, $scale, $rot;
-    # $dx, $dy, $scale, $rot, $lat0, $lon0, $lat1, $lat2;
+    $lat0, $lon0, $lat1, $lat2; 
   print $ps, "\n";
 
   my $cs_src = Geo::LibProj::cs2cs->new($CRS_lat_lon => $ps);
   my @inp = List::Util::pairmap { [$b , $a  ] }  $t->list;  # $T is lon_lat ! 
-  print scalar @inp;
-  print ' | @inp: ', Dumper(\@inp);
+  # print scalar @inp;
+  # print ' | @inp: ', Dumper(\@inp);
   my @r = $cs_src-> transform( @inp );
   # apply my own reverse helmert and flatten list
-  # $x .= map { (
   my @rr = map { (
     ($$_[0] - $dx) / $scale,
     ($$_[1] - $dy) / $scale 
          ) } @r;
   $x .= [ @rr ];
-####==================~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~------------------------
-  print 't: ', $t, "\n";
-  print 'x: ', $x, "\n";
-  # print 'X: ', $x->splitdim(0,2), "\n";
-  # print 'T: ', $t->splitdim(0,2), "\n";
-  print '@r: ', Dumper(\@r);
-  print '@rr: ', Dumper(\@rr);
+  if (0) {
+    print 't: ', $t, "\n";
+    print 'x: ', $x, "\n";
+    print '@r: ', Dumper(\@r);
+    print '@rr: ', Dumper(\@rr);
+  }
 
 }  
 
