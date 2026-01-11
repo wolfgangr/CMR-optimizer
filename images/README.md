@@ -1,4 +1,8 @@
 ## Log of exemplary workflow
+### What we want in the end
+Maps from different soources properly layered and manageable the qgis way
+![example](./QGIS-history-layers-example.jpg)
+
 ### `Shepherd_0042.jpg`  
 **Source Map**, see https://archive.org/details/HistoricalAtlasWilliamR.Shepherd/page/n1/mode/2up  
 Historical Atlas by William R. Shepherd, pg 70/71  
@@ -68,26 +72,42 @@ The CSV block with the point parameters is without spaces and matches the table 
 Note that if we change our georef target CRS, `mapX`, `mapY` will change, even if the underlying lat/lon does not change.  
 Thus we may watch out for rounding errors and numerical artefacts upon switching target CRS.
 
+# cutting edge ...
+
+### Helmert
+![](Shepherd_0042-Georef-Helmert.jpg)
+
+![](Shepherd_0042_EPSG3575_EuropeLAEA_Helmert.jpg)
+
+### Polynomial 1
+![](Shepherd_0042_QGIS_Helmert-P1.jpg)
+![](Shepherd_0042_EPSG3575_EuropeLAEA_Poly1.jpg)
+![](Shepherd_0042-Georef-Poly1.jpg)
+
+
+### Polynomial 2
+![](Shepherd_0042-Georef-Poly2.jpg)
+![](Shepherd_0042_EPSG3575_EuropeLAEA_Poly2.jpg)
+
+### Polynomial 3
+![](Shepherd_0042_QGIS_P3.jpg)
+![](Shepherd_0042_EPSG3575_EuropeLAEA_Poly3.jpg)
+
+
+### Thin Plate Spline
+![](Shepherd_0042_QGIS_TPS.jpg)
+![](Shepherd_0042-Georef-TPS.jpg)
+
 ================~~~~~~~~~~~~~~~~~~~~~~~~~
 
-QGIS-history-layers-example.jpg
-QGIS_LAEA-poly3_vs_myBonne-50-20-Helmert.jpg
-Shepherd_0042_EPSG3575_EuropeLAEA_Helmert.jpg
-Shepherd_0042_EPSG3575_EuropeLAEA_Poly1.jpg
-Shepherd_0042_EPSG3575_EuropeLAEA_Poly2.jpg
-Shepherd_0042_EPSG3575_EuropeLAEA_Poly3.jpg
-Shepherd_0042-Georef-Helmert.jpg
-Shepherd_0042-Georef-Poly1.jpg
-Shepherd_0042-Georef-Poly2.jpg
-Shepherd_0042-Georef-TPS.jpg
+
+![](QGIS_LAEA-poly3_vs_myBonne-50-20-Helmert.jpg)
 
 
-Shepherd_0042_myBonne-50-20-Helmert-4pt-Poly1.jpg
-Shepherd_0042_myBonne-50-20-Helmert.jpg
-Shepherd_0042_myBonne-50-20-P1.jpg
-Shepherd_0042_myBonne-50-20-P2.jpg
-Shepherd_0042_myBonne-50-20-P3.jpg
-Shepherd_0042_QGIS_Helmert-P1.jpg
-Shepherd_0042_QGIS_P3.jpg
-Shepherd_0042_QGIS_TPS.jpg
+![](Shepherd_0042_myBonne-50-20-Helmert-4pt-Poly1.jpg)
+![](Shepherd_0042_myBonne-50-20-Helmert.jpg)
+![](Shepherd_0042_myBonne-50-20-P1.jpg)
+![](Shepherd_0042_myBonne-50-20-P2.jpg)
+![](Shepherd_0042_myBonne-50-20-P3.jpg)
+
 
