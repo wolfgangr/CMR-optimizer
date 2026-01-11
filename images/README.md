@@ -116,17 +116,45 @@ Showing both layers (Helmert and Poly 1) in QGIS, we notice
 
 
 ### Polynomial 2
+
+When we switch to **Polynomial 2**, pixel deviation drastically falls from 52 to 3.5.  
+In normal scale, the red needles are barely visible in the UI any more.
+
 ![](Shepherd_0042-Georef-Poly2.jpg)
+
+In the `geotiff`, the bending of the image gets obvious.  
+It 'somehow looks like' wrapped conus, but not raelly.  
+We might take this as clue that what we are relly looking for might be between laea and eqdc.
+
 ![](Shepherd_0042_EPSG3575_EuropeLAEA_Poly2.jpg)
 
 ### Polynomial 3
-![](Shepherd_0042_QGIS_P3.jpg)
+
+3rd order polynoms allow for even more tweaks like *"blowing"* up the image like a ballon.  
+However, compared to poly 2, we see pixel deviation fall from 3.5 to 3.2 merely.  The difference is close to invisible in the UI.
+Thus, for the current case, we might stick with the poly 2, if it were not for didactical reasons.  
+E.g. for maps much larger than Europe, or distortions from uncorrected book splines, things may differ.
+
+The `geotiff` looks quite similiar to the poly 2 case. Only by toggling or overlaying the images, we notice a slight *"wiggling"* of the corners.
+
 ![](Shepherd_0042_EPSG3575_EuropeLAEA_Poly3.jpg)
 
+In QGIS (Georeferncer window still active), we find the graticule's crossings neatly placed at the red dots.  
+However, we may notice that beyond the dots, towards the edges of the map, the direction of the graticule is misaligned a bit.  
+If we play the same game with a lower number of match points, we have to expect larger distortions, again.
+
+![](Shepherd_0042_QGIS_P3.jpg)
 
 ### Thin Plate Spline
-![](Shepherd_0042_QGIS_TPS.jpg)
+
+Just for curiosity, and we have such a large number of matching points already at hand, we may switch to TPS aka _"rubber sheet"_ mode.  
+Pixel deviation falls to some negative exponential I'd consider as zero.  
+
 ![](Shepherd_0042-Georef-TPS.jpg)
+
+In QGIS, we may already notice some typical signs of **"overfitting"** i.e. considerable bents at margins and corners and small scale "wiggling" inside the picture.  
+
+![](Shepherd_0042_QGIS_TPS.jpg)
 
 ================~~~~~~~~~~~~~~~~~~~~~~~~~
 
