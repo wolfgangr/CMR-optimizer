@@ -1,6 +1,8 @@
 ## Log of exemplary workflow
 ### What we want in the end
-Maps from different soources properly layered and manageable the qgis way
+Maps from different sources properly layered and manageable the qgis way  
+_(sorry for the pixelation of maps w/ unknown (C) state )_  
+
 ![example](./QGIS-history-layers-example.jpg)
 
 ### `Shepherd_0042.jpg`  
@@ -142,6 +144,12 @@ The `geotiff` looks quite similiar to the poly 2 case. Only by toggling or overl
 In QGIS (Georeferncer window still active), we find the graticule's crossings neatly placed at the red dots.  
 However, we may notice that beyond the dots, towards the edges of the map, the direction of the graticule is misaligned a bit.  
 If we play the same game with a lower number of match points, we have to expect larger distortions, again.
+
+I played with different project CRS in QGIS.  
+The screenshot below is with ESRI:54024 aka "World_Bonne".  
+We find the map projected to near - but not exact - rectangular shape.  
+Thus we may conclude that we are quite close to original map producer's CRS.  
+If we were able to match this exactly, we might set our georeferencer to low order projections (helmert, poly1), requiring only a small number of matchpoints and introducing no artificial distortions.
 
 ![](Shepherd_0042_QGIS_P3.jpg)
 
