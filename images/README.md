@@ -74,9 +74,59 @@ The CSV block with the point parameters is without spaces and matches the table 
 Note that if we change our georef target CRS, `mapX`, `mapY` will change, even if the underlying lat/lon does not change.  
 Thus we may watch out for rounding errors and numerical artefacts upon switching target CRS.
 
-# cutting edge ...
 ## Get some feeling for atlas CRS
-TBD: links to proj list, mapfoobatr comparison, pdf ESRI and USGS
+
+Most of the 7000 CRS in QGIS focus on the survey business, with precision in mind.  
+For atlasses, the technical nuts'n bolts are the same. However, the focus is more towards visual appeal and continuity over larger (typically continental) areas in one image. Most Atlasses in the late 19th ... 20 th century appear to emply precise projection techniques, but do not reveal them. 
+
+The better we match the original projection, the faster and better the georeferncing will work out. A trained eye on particularities of different projections is the first valuable tool towards that endeavour.
+
+### Mapping Around
+[Mapping Around](https://mappingaround.in/map-projections/) provides an visually intuitive insight to the "clever but imperfect art of flattening the earth".
+Quite concise, nontheless technically quite complete and correct.
+
+- types of survace
+- aspects
+- viewpoints
+- nonperspective variants
+
+### Compare Map Projections
+[Compare Map Projections](https://map-projections.net/imglist.php) is a private blog with a lot of 
+Description an visual comparison of many common projections
+
+6. Working with Projections
+https://docs.qgis.org/3.40/en/docs/user_manual/working_with_projections/working_with_projections.html#overview-of-projection-support
+
+11.3. Georeferencer
+https://docs.qgis.org/3.40/en/docs/user_manual/managing_data_source/georeferencer.html
+
+
+https://docs.qgis.org/3.40/en/docs/user_manual/working_with_projections/working_with_projections.html#working-with-projections
+
+14.2. Lesson: Georeferencing a Map
+https://docs.qgis.org/3.40/en/docs/training_manual/forestry/map_georeferencing.html
+
+
+
+
+`proj` is the library that performs all the CRS work under the hood of QGIS.  
+This page is a list with iconic images for all available CRS.
+https://proj.org/en/stable/operations/projections/all_images.html
+
+ESRI
+Understanding Map Projections
+Melita Kennedy
+http://kartoweb.itc.nl/geometrics/Map%20projections/Understanding%20Map%20Projections.pdf
+
+An album of map projections.
+(U.S. Geological Survey professional paper; 1453)
+First printing 1989
+Second printing 1994
+https://pubs.usgs.gov/pp/1453/report.pdf
+
+
+
+
 image in diercke don't dara to steal copyright
 
 ## Playing with Georef settings
@@ -166,6 +216,11 @@ In QGIS, we may already notice some typical signs of **"overfitting"** i.e. cons
 
 ================~~~~~~~~~~~~~~~~~~~~~~~~~
 
+https://proj.org/en/stable/operations/projections/bonne.html#bonne
+https://proj.org/en/stable/operations/projections/laea.html#laea
+https://proj.org/en/stable/operations/projections/eqdc.html#eqdc
+https://proj.org/en/stable/operations/projections/aeqd.html#aeqd
+https://proj.org/en/stable/operations/projections/ortho.html#ortho
 
 ![](QGIS_LAEA-poly3_vs_myBonne-50-20-Helmert.jpg)
 
