@@ -76,58 +76,56 @@ Thus we may watch out for rounding errors and numerical artefacts upon switching
 
 ## Get some feeling for atlas CRS
 
-Most of the 7000 CRS in QGIS focus on the survey business, with precision in mind.  
-For atlasses, the technical nuts'n bolts are the same. However, the focus is more towards visual appeal and continuity over larger (typically continental) areas in one image. Most Atlasses in the late 19th ... 20 th century appear to emply precise projection techniques, but do not reveal them. 
+Most of the 7000 CRS in QGIS focus on the **survey** business, with nothing else than **precision** in mind.  
+For **atlases**, the technical nuts'n bolts are the same. However, the focus is more towards **visual appeal** and **continuity over** larger (typically **continent**al) areas in one image. 
 
-The better we match the original projection, the faster and better the georeferncing will work out. A trained eye on particularities of different projections is the first valuable tool towards that endeavour.
+Most atlases in the late 19th ... 20 th century appear to employ **precise projection** techniques, but do **not reveal** them.  
+As of my current findings, I think that there are a couple of standard projection types with some special **paramters, optimized** for the **purpose** and **coverage** of each map. Contrary to survey projections, those individual parametrized projections are **not in any catalogue** as they are included in QGIS.
+
+The better we match the original projection, the faster and more efficient the georeferencing will work out. A **trained eye** on particularities of different projections is the first valuable tool towards that endeavour.
 
 ### Mapping Around
-[Mapping Around](https://mappingaround.in/map-projections/) provides an visually intuitive insight to the "clever but imperfect art of flattening the earth".
-Quite concise, nontheless technically quite complete and correct.
+[Mapping Around](https://mappingaround.in/map-projections/) provides an **visually intuitive** insight to the "clever but imperfect art of flattening the earth".
+Quite concise, nontheless technically quite complete and correct of classifications, including:
 
-- types of survace
+- types of surface
 - aspects
 - viewpoints
-- nonperspective variants
+- nonperspective variants (such as equidistant, equal area, conformal, compromise)
 
-### Compare Map Projections
+### map-projections.net
 [Compare Map Projections](https://map-projections.net/imglist.php) is a private blog with a lot of 
-Description an visual comparison of many common projections
+Description and visual comparison of many common projections.
 
-6. Working with Projections
-https://docs.qgis.org/3.40/en/docs/user_manual/working_with_projections/working_with_projections.html#overview-of-projection-support
+Any two selected projects can be selected for mutual visual comparison, including gratitules and [Tissot's indicatrix](https://en.wikipedia.org/wiki/Tissot%27s_indicatrix). Toggling between layers reveals even tiny but relevant differences to the eye, that are hard to identify on adjacent images.
 
-11.3. Georeferencer
-https://docs.qgis.org/3.40/en/docs/user_manual/managing_data_source/georeferencer.html
+For selected developments of projections, the author provides blog articles with indepth discussions about the "why" and "pro&con".
 
+### QGIS manual
+Relevant chapters:
 
-https://docs.qgis.org/3.40/en/docs/user_manual/working_with_projections/working_with_projections.html#working-with-projections
+[6. Working with Projections](https://docs.qgis.org/3.40/en/docs/user_manual/working_with_projections/working_with_projections.html)
 
-14.2. Lesson: Georeferencing a Map
-https://docs.qgis.org/3.40/en/docs/training_manual/forestry/map_georeferencing.html
+[11.3. Georeferencer](https://docs.qgis.org/3.40/en/docs/user_manual/managing_data_source/georeferencer.html)
 
+[14.2. Lesson: Georeferencing a Map](https://docs.qgis.org/3.40/en/docs/training_manual/forestry/map_georeferencing.html)
 
-
+### lipproj
 
 `proj` is the library that performs all the CRS work under the hood of QGIS.  
-This page is a list with iconic images for all available CRS.
-https://proj.org/en/stable/operations/projections/all_images.html
+This page is a list with iconic images for all available CRS: 
+[List of all projection images](https://proj.org/en/stable/operations/projections/all_images.html)
 
-ESRI
-Understanding Map Projections
-Melita Kennedy
-http://kartoweb.itc.nl/geometrics/Map%20projections/Understanding%20Map%20Projections.pdf
+### ESRI "Understanding Map Projections"
+by Melita Kennedy: [Understanding Map Projections](http://kartoweb.itc.nl/geometrics/Map%20projections/Understanding%20Map%20Projections.pdf)
+Comprehensive text, developing and comparing projections, properties and usage.  
+Technical entry level, with emphasis on readability, decent coloured images.
 
-An album of map projections.
-(U.S. Geological Survey professional paper; 1453)
-First printing 1989
-Second printing 1994
-https://pubs.usgs.gov/pp/1453/report.pdf
+### An album of map projections.
+[U.S. Geological Survey professional paper 1453](https://pubs.usgs.gov/pp/1453/report.pdf) - First printing 1989, Second printing 1994
 
+similiar, but at intermediary technical level, only black-white images, but including formulas
 
-
-
-image in diercke don't dara to steal copyright
 
 ## Playing with Georef settings
 ... and try to understand them ...  
