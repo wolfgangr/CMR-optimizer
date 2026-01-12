@@ -132,13 +132,13 @@ Technical entry level, with emphasis on readability, decent coloured images.
 similiar, but at intermediary technical level, only black-white images, but including formulas
 
 
-## 4) Playing with Georef settings
+## 4) Playing with Georef transformation settings
 ... and try to understand them ...  
 We find **circular parallels** on our map. Thus we might head for `eqdc` aka *equidistant conic*.  
 A closer look reveals slightly **bent meridians**, too, so we'd go for `LAEA` *(equal area azimuthal)* or it's bretheren instead.  
 Searching QGIS standard CRS list, we find **EPSG:3575** *"europe North pole LAEA"* as close enough and use this as **georef target CRS** to start.
 
-### Helmert
+### 4 a) Helmert
 Helmert transformation just allows **shift, scale and rotation**.  
 Georeferencer calculates more than **80 Pixel deviation** - clearly visible as red lines in the georef UI:
 
@@ -150,7 +150,7 @@ With sth like `exiftool`, we could extract the parameters of mapping from the ti
 
 ![](Shepherd_0042_EPSG3575_EuropeLAEA_Helmert.jpg)  
 
-### Polynomial 1
+### 4 b) Polynomial 1
 1st degree polynomials allow different scales for x and y.  
 Pixel deviation falls to 52 - still quite some long needles in the map:  
 
@@ -170,7 +170,7 @@ Showing both layers (Helmert and Poly 1) in QGIS, we notice
 ![](Shepherd_0042_QGIS_Helmert-P1.jpg)  
 
 
-### Polynomial 2
+### 4 c) Polynomial 2
 
 When we switch to **Polynomial 2**, pixel deviation drastically falls from 52 to 3.5.  
 In normal scale, the red needles are barely visible in the UI any more.
@@ -183,7 +183,7 @@ We might take this as clue that what we are relly looking for might be between l
 
 ![](Shepherd_0042_EPSG3575_EuropeLAEA_Poly2.jpg)
 
-### Polynomial 3
+### 4 d) Polynomial 3
 
 3rd order polynoms allow for even more tweaks like *"blowing"* up the image like a ballon.  
 However, compared to poly 2, we see pixel deviation fall from 3.5 to 3.2 merely.  The difference is close to invisible in the UI.
@@ -206,7 +206,7 @@ If we were able to match this exactly, we might set our georeferencer to low ord
 
 ![](Shepherd_0042_QGIS_P3.jpg)
 
-### Thin Plate Spline
+### 4 e) Thin Plate Spline
 
 Just for curiosity, and we have such a large number of matching points already at hand, we may switch to TPS aka _"rubber sheet"_ mode.  
 Pixel deviation falls to some negative exponential I'd consider as zero.  
@@ -217,12 +217,29 @@ In QGIS, we may already notice some typical signs of **"overfitting"** i.e. cons
 
 ![](Shepherd_0042_QGIS_TPS.jpg)
 
-================~~~~~~~~~~~~~~~~~~~~~~~~~
-## 5) Try the precision approach
+## 5) Least Square algorithm to optimize CRS
 
-### Least square based optimisation of projection and their parameters
+Reconsider our georeferencing pipeline.  
+In _italics_ include the hypothetical map making process to indicate the artefacts we try to revert
 
-#### equidistand conic
+- *assume some precise source data maps, derived from 19th ctry survey data, covered in the late map makers fundus*
+- *the map maker applies some transformation to those maps from a set we might hope to know*
+- *pre-print and print operations some decades ago may produce extra errors*
+- *the historic atlas gets scanned and maybe postprocessed*
+- This is our **source raster** as the one we started with on top of this article
+- We visually select a couple of **match points** in the georeferencer
+- the georeferencer applies **least square** method to optimize a **(polynomial) transformation** of our source raster
+- the transformed geotiff raster ist **interpreted as source CRS** of the raster source ...
+- ... and **reprojected** to **project CRS** for display in QGIS main map canvas
+
+What we change in our approach ist that we employ least square algorithm not to the arbitrary polynomial transformation, but to the informed selection and parametrisation of the raster source CRS. 
+
+We expect (and found) that the polynomial transformation necessary is substantially simplified.
+
+Instead of selecting skd of arbitrary CRS from a restricted catalog (e.g. QGIS predefineds) and forcefully bending the source the result to match,  
+we employ Least square based optimisation to the choice of projection and their parameters nd apply only minor corrections to the results.
+
+### 5 a) equidistand conic
 
 Based on the experience collected thus far, we try a numeric least square optimisation to identify the projection type and the proper parameters of our test map.
 We develop the scripts in the root directory of this project.
@@ -243,7 +260,7 @@ By halfway educated guess, we assume that `||e||_2` is the sum of square of all 
 With Pythagoras and euklidean distance in mind, we calculate a mean **error of 11,5 pixel**.  
 Much better than the > 80 pixel error from best guess out of QGIS predefined catalog we started with...
 
-#### equidistant azimuthal
+### 5 b) equidistant azimuthal
 
 ... but still not perfect.  
 We try to measure **pixel distance** between graticule crossings in GIMP. The results are ... hm ... indifferent.  
@@ -271,7 +288,7 @@ Second look compares this to the obvious center of the map at 20 degrees.
 Andy why would a mapmaker decide for this somewhat odd figure as 20.?
 
 
-#### Lambert's equal area azimuthal
+### 5 c) Lambert's equal area azimuthal
 
 Next try is radial distortion yielding [equal area](https://proj.org/en/stable/operations/projections/laea.html#laea). 
 ```
@@ -283,7 +300,7 @@ Mean error slightly decreases to **7.1 pixel**.  Would be nice to ask a trained 
 The known arguments for [LAEA](https://en.wikipedia.org/wiki/Lambert_azimuthal_equal-area_projection) (visual weight of remote areas, complete coverage of the globe) do not hold for the map at hand. Might we question a decision for this choice?
 
 
-#### Orthographic azimuthal
+### 5 d) Orthographic azimuthal
 
 [Orthographic projection](https://proj.org/en/stable/operations/projections/ortho.html#ortho) resembles the view towards the globe from a remot point. Thus it might be considered as naturally intuitive. It provides for bent meridians and slightly decrasing distances for remote points - similiar but a bit less than LAEA. It hides half of the globe, but for an European extent, this would not hurt.
 
@@ -312,16 +329,16 @@ Mean **error = 5.7 pixel** is the best value we got so far, even if the algorith
 The central meridian is quite close to visual obvious 20 deg.
 The central parallel of 50.4 deg reads a bit odd, and not in the center of the map. Numerical artefact? Anglocentrism? Who knows...
 
-#### Comparing optimised results with first guess
+## 6) Comparing optimised results with first guess
 
-We switch back from the boring visuals of the linux console to **QGIS georeferencer**.  
+We switch back from the boring visuals of the linux console to the fancy GUI of **QGIS georeferencer**.  
 We still have our same source image and the 40 match points loaded.
 
-In the **Transformation settings**, we enter the projection we found as a **custom CRS**:  
+In the **Transformation settings**, we enter the optimized projection we found (deg rounded to integers) as a **custom CRS**:  
 `+proj=bonne +lat_1=50 +lon_0=20 +ellps=WGS84 +units=m +no_defs`
 
-With Helmert transformation, we **confirm our estimated error of 5.8 pixel**.  
-Remember - our first trials with polar centered laea where at 80 pixels.  
+- With **Helmert** transformation, we **confirm our estimated error of 5.8 pixel**.  
+Remember - our first trials with polar centered LAEA (from QGIS predefined CRS) where at 80 pixels.  
 - **Polynomial 1**: estimated error = **2.2 pixel**
 - Polynomial 2: estimated error = 1.6 pixel
 - Polynomial 3: estimated error = 1.4 pixel
@@ -329,14 +346,26 @@ Remember - our first trials with polar centered laea where at 80 pixels.
 So we might assume that our map was slightly compressed - maybe at map making, scanning, scan postprocessing - who knows...
 From this singular experiment, it's hard to say whether the further improvement with higher degree polynomial is due to overfitting or due to squeezing out remaining error in estimation.
 
-We reduce the numer of our match points from the number of 40 as in all procedures documented so far to only 4 
+We **reduce** the nubmer of our **match points** from the number of 40 as in all procedures documented so far **to only 4**.  
+If we put the layer in QGIS main window on top of the Poly-3-result with 40 points and unmatched CRS, we can't see much visual difference in the inner relevant fields of the map. At the edges, we identify sligt bents. We might even guess that the path ` 4-point X Helmert X matched CRS` yields better results for extrapolating over the matched points than the 'conventional' `40-point x 3rd-degree-polynomial x arbitrary CRS`.  
+
 ![](QGIS_LAEA-poly3_vs_myBonne-50-20-Helmert.jpg)
 
+## Final conclusion: Goal attained
+- proof of concept demonstrated
+- we can select CRS an optimize parameters by least square fitting
+- optimized CRS found that way drastically reduces the need for "forceful fitting" afterwards
+- ... thus requiring much less matching points to be digitized
+- promising considerable gains in precision and efficiency for batch conversion of historic atlases
 
-![](Shepherd_0042_myBonne-50-20-Helmert-4pt-Poly1.jpg)
-![](Shepherd_0042_myBonne-50-20-Helmert.jpg)
-![](Shepherd_0042_myBonne-50-20-P1.jpg)
-![](Shepherd_0042_myBonne-50-20-P2.jpg)
-![](Shepherd_0042_myBonne-50-20-P3.jpg)
+##### Attachment: unsorted images
+(left for the curious)
+```
+Shepherd_0042_myBonne-50-20-Helmert-4pt-Poly1.jpg
+Shepherd_0042_myBonne-50-20-Helmert.jpg
+Shepherd_0042_myBonne-50-20-P1.jpg
+Shepherd_0042_myBonne-50-20-P2.jpg
+Shepherd_0042_myBonne-50-20-P3.jpg
+```
 
 
