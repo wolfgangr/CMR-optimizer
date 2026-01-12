@@ -220,7 +220,7 @@ In QGIS, we may already notice some typical signs of **"overfitting"** i.e. cons
 ================~~~~~~~~~~~~~~~~~~~~~~~~~
 ## 5) Try the precision approach
 
-### Least square based optimisation of projection parameters
+### Least square based optimisation of projection and their parameters
 
 #### equidistand conic
 
@@ -296,10 +296,40 @@ i.e. **mean error 8.6 pixel** "smells significantly" worse ... surprisingly. Hm 
 
 #### Bonne
 
-https://proj.org/en/stable/operations/projections/bonne.html#bonne
+With the understanding gained 'till now, we reread our material.  
+In the USGS paper cited above, we find [Bonne's projection](https://proj.org/en/stable/operations/projections/bonne.html#bonne) mentioned as "frequently used until recently for atlas maps of continents". Looks like it had escaped out attention before due to it's weired shape of world maps boundaries.
+
+Hower, in areas cropped to the size of continents, Bonne looks quite familiar and close to our source image.  
+And similiar to azimutal views, it takes a map center, expressed e.g. in lat/lon, as parameters. 
+
+So let's try to find them:
+
+```
++proj=bonne +lat_1=50.407714 +lon_0=19.755550 +ellps=WGS84 +units=m +no_defs +type=crs
+||e||_2	 = 1319.68
+```
+Mean **error = 5.7 pixel** is the best value we got so far, even if the algorithm fails to converge on rotation, as in the other cases above.  
+The central meridian is quite close to visual obvious 20 deg.
+The central parallel of 50.4 deg reads a bit odd, and not in the center of the map. Numerical artefact? Anglocentrism? Who knows...
 
 #### Comparing optimised results with first guess
 
+We switch back from the boring visuals of the linux console to **QGIS georeferencer**.  
+We still have our same source image and the 40 match points loaded.
+
+In the **Transformation settings**, we enter the projection we found as a **custom CRS**:  
+`+proj=bonne +lat_1=50 +lon_0=20 +ellps=WGS84 +units=m +no_defs`
+
+With Helmert transformation, we **confirm our estimated error of 5.8 pixel**.  
+Remember - our first trials with polar centered laea where at 80 pixels.  
+- **Polynomial 1**: estimated error = **2.2 pixel**
+- Polynomial 2: estimated error = 1.6 pixel
+- Polynomial 3: estimated error = 1.4 pixel
+
+So we might assume that our map was slightly compressed - maybe at map making, scanning, scan postprocessing - who knows...
+From this singular experiment, it's hard to say whether the further improvement with higher degree polynomial is due to overfitting or due to squeezing out remaining error in estimation.
+
+We reduce the numer of our match points from the number of 40 as in all procedures documented so far to only 4 
 ![](QGIS_LAEA-poly3_vs_myBonne-50-20-Helmert.jpg)
 
 
