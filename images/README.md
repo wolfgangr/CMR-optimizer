@@ -1,9 +1,13 @@
-## Log of exemplary workflow
-### What we want in the end
+# Log of exemplary workflow
+## 1) What we want in the end
 Maps from different sources properly layered and manageable the qgis way  
 _(sorry for the pixelation of maps w/ unknown (C) state )_  
 
 ![example](./QGIS-history-layers-example.jpg)
+
+## 2) What we start with
+
+Let's pick a suitable raster for our job:
 
 ### `Shepherd_0042.jpg`  
 **Source Map**, see https://archive.org/details/HistoricalAtlasWilliamR.Shepherd/page/n1/mode/2up  
@@ -74,7 +78,7 @@ The CSV block with the point parameters is without spaces and matches the table 
 Note that if we change our georef target CRS, `mapX`, `mapY` will change, even if the underlying lat/lon does not change.  
 Thus we may watch out for rounding errors and numerical artefacts upon switching target CRS.
 
-## Train our eyes for a visual feeling for atlas CRS
+## 3) Train our eyes for a visual feeling for atlas CRS
 
 Most of the 7000 CRS in QGIS focus on the **survey** business, with nothing else than **precision** in mind.  
 For **atlases**, the technical nuts 'n' bolts are the same. However, the focus is more towards **visual appeal** and **continuity over** larger (typically **continent**al) areas in one image. 
@@ -128,7 +132,7 @@ Technical entry level, with emphasis on readability, decent coloured images.
 similiar, but at intermediary technical level, only black-white images, but including formulas
 
 
-## Playing with Georef settings
+## 4) Playing with Georef settings
 ... and try to understand them ...  
 We find **circular parallels** on our map. Thus we might head for `eqdc` aka *equidistant conic*.  
 A closer look reveals slightly **bent meridians**, too, so we'd go for `LAEA` *(equal area azimuthal)* or it's bretheren instead.  
@@ -214,12 +218,87 @@ In QGIS, we may already notice some typical signs of **"overfitting"** i.e. cons
 ![](Shepherd_0042_QGIS_TPS.jpg)
 
 ================~~~~~~~~~~~~~~~~~~~~~~~~~
+## 5) Try the precision approach
+
+### Least square based optimisation of projection parameters
+
+#### equidistand conic
+
+Based on the experience collected thus far, we try a numeric least square optimisation to identify the projection type and the proper parameters of our test map.
+We develop the scripts in the root directory of this project.
+
+On my shelfes, I found a "Diercke" atlas from my kids, one of the rare products listening the projection type and parameter for selected maps.  
+For German and European coverages, they employ [equidistant conics](https://proj.org/en/stable/operations/projections/eqdc.html#eqdc) with lat_1 and lat_2 placed around the top and bottom qartiles of the area covered.  
+
+We want to get rid of higher order transformation as far as possible. So Helmert is the first choice.  
+Our geometric gut feeling may tell us that for a conical projection, `lat_0` aka **central meridian** (maybe combined with a horizontal shift) is **collinear with rotation**.  
+Thus we only allow for shift and scale, not even a rotation.  
+
+We hack the first versions of our scripts and find 
+```
++proj=eqdc +lat_0=24.127510 +lon_0=20.633909 +lat_1=31.878340 +lat_2=61.266227 +ellps=intl +units=m +no_defs
+||e||_2	 = 5199.21
+````
+By halfway educated guess, we assume that `||e||_2` is the sum of square of all our 40 x 2 match point coordinates pixel deviation.  
+With Pythagoras and euklidean distance in mind, we calculate a mean **error of 11,5 pixel**.  
+Much better than the > 80 pixel error from best guess out of QGIS predefined catalog we started with...
+
+#### equidistant azimuthal
+
+... but still not perfect.  
+We try to measure **pixel distance** between graticule crossings in GIMP. The results are ... hm ... indifferent.  
+But we see that **lateral meridians** are slightly **bent** towards the central one. That's an **argument against conic** projection.  
+
+So next we try an **azimuthal** view. 
+Not centered at the north pole, since this would leave straight meridians as well.  
+Instead, we expect the **center of projection**, where the plane touches the sphere, somewhere **inside our maps area**.  
+Maybe right in the middle, maybe at some even figure in the graticule, maybe at some unknown common reference point in the late card makers collection?  
+
+We don't know, so we ask least square optimisation.  
+Regarding the radial projection scheme, our first guess is [azimuthal equidistant](https://proj.org/en/stable/operations/projections/aeqd.html#aeqd).   
+We extend our script to provide for rotation. Sadly, for reasons not yet known, it refuses to converge then.  
+So we fix rotation at 0, again.  
+
+Thus we get:  
+```
++proj=aeqd +lat_0=44.964767 +lon_0=20.440621 +ellps=WGS84 +units=m +no_defs +type=crs
+||e||_2	 = 2228.46
+```
+Mean error calculates to **7.5 pixel**.  
+Not bad. The center of projection lies close to lat=45 / lon = 20.5 degrees. 
+Close, but not right in the middle of our map. Sounds reasonable at first look.  
+Second look compares this to the obvious center of the map at 20 degrees.  
+Andy why would a mapmaker decide for this somewhat odd figure as 20.?
+
+
+#### Lambert's equal area azimuthal
+
+Next try is radial distortion yielding [equal area](https://proj.org/en/stable/operations/projections/laea.html#laea). 
+```
++proj=laea +lat_0=45.792803 +lon_0=20.436423 +ellps=WGS84 +units=m +no_defs +type=crs
+||e||_2	 = 2008.09
+```
+Mean error slightly decreases to **7.1 pixel**.  Would be nice to ask a trained statistician about significance... anyway...  
+
+The known arguments for [LAEA](https://en.wikipedia.org/wiki/Lambert_azimuthal_equal-area_projection) (visual weight of remote areas, complete coverage of the globe) do not hold for the map at hand. Might we question a decision for this choice?
+
+
+#### Orthographic azimuthal
+
+[Orthographic projection](https://proj.org/en/stable/operations/projections/ortho.html#ortho) resembles the view towards the globe from a remot point. Thus it might be considered as naturally intuitive. It provides for bent meridians and slightly decrasing distances for remote points - similiar but a bit less than LAEA. It hides half of the globe, but for an European extent, this would not hurt.
+
+We get
+```
++proj=ortho +lat_0=46.850619 +lon_0=20.417397 +ellps=WGS84 +units=m +no_defs +type=crs
+||e||_2	 = 2974.06
+```
+i.e. **mean error 8.6 pixel** "smells significantly" worse ... surprisingly. Hm ... 
+
+#### Bonne
 
 https://proj.org/en/stable/operations/projections/bonne.html#bonne
-https://proj.org/en/stable/operations/projections/laea.html#laea
-https://proj.org/en/stable/operations/projections/eqdc.html#eqdc
-https://proj.org/en/stable/operations/projections/aeqd.html#aeqd
-https://proj.org/en/stable/operations/projections/ortho.html#ortho
+
+#### Comparing optimised results with first guess
 
 ![](QGIS_LAEA-poly3_vs_myBonne-50-20-Helmert.jpg)
 
