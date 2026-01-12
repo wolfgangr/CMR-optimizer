@@ -74,30 +74,30 @@ The CSV block with the point parameters is without spaces and matches the table 
 Note that if we change our georef target CRS, `mapX`, `mapY` will change, even if the underlying lat/lon does not change.  
 Thus we may watch out for rounding errors and numerical artefacts upon switching target CRS.
 
-## Get some feeling for atlas CRS
+## Train our eyes for a visual feeling for atlas CRS
 
 Most of the 7000 CRS in QGIS focus on the **survey** business, with nothing else than **precision** in mind.  
-For **atlases**, the technical nuts'n bolts are the same. However, the focus is more towards **visual appeal** and **continuity over** larger (typically **continent**al) areas in one image. 
+For **atlases**, the technical nuts 'n' bolts are the same. However, the focus is more towards **visual appeal** and **continuity over** larger (typically **continent**al) areas in one image. 
 
 Most atlases in the late 19th ... 20 th century appear to employ **precise projection** techniques, but do **not reveal** them.  
-As of my current findings, I think that there are a couple of standard projection types with some special **paramters, optimized** for the **purpose** and **coverage** of each map. Contrary to survey projections, those individual parametrized projections are **not in any catalogue** as they are included in QGIS.
+As of my current findings, I think that there are a couple of standard projection types with some special **paramters, optimized** for the **purpose** and **coverage** of each map. Contrary to survey projections, those individual parametrized projections are **not in any catalogue** and thus not included as _predefined CRS_ in QGIS.
 
 The better we match the original projection, the faster and more efficient the georeferencing will work out. A **trained eye** on particularities of different projections is the first valuable tool towards that endeavour.
 
 ### Mapping Around
 [Mapping Around](https://mappingaround.in/map-projections/) provides an **visually intuitive** insight to the "clever but imperfect art of flattening the earth".
-Quite concise, nontheless technically quite complete and correct of classifications, including:
+Quite concise, nontheless technically quite complete and correct overview of classifications, including:
 
-- types of surface
-- aspects
-- viewpoints
+- types of surface (i.e. flat, cylindric, conic)
+- aspects (i. e. angle of view)
+- viewpoints (i.e. distance of view)
 - nonperspective variants (such as equidistant, equal area, conformal, compromise)
 
 ### map-projections.net
 [Compare Map Projections](https://map-projections.net/imglist.php) is a private blog with a lot of 
-Description and visual comparison of many common projections.
+description and visual comparison of many common projections.
 
-Any two selected projects can be selected for mutual visual comparison, including gratitules and [Tissot's indicatrix](https://en.wikipedia.org/wiki/Tissot%27s_indicatrix). Toggling between layers reveals even tiny but relevant differences to the eye, that are hard to identify on adjacent images.
+Any **two** selected **projections** can be selected for **mutual visual comparison**, including coastlines, graticules and [Tissot's indicatrix](https://en.wikipedia.org/wiki/Tissot%27s_indicatrix). Toggling between layers reveals even tiny but relevant differences to the eye, that otherwise might escape the attention on adjacent images.
 
 For selected developments of projections, the author provides blog articles with indepth discussions about the "why" and "pro&con".
 
@@ -118,6 +118,7 @@ This page is a list with iconic images for all available CRS:
 
 ### ESRI "Understanding Map Projections"
 by Melita Kennedy: [Understanding Map Projections](http://kartoweb.itc.nl/geometrics/Map%20projections/Understanding%20Map%20Projections.pdf)
+
 Comprehensive text, developing and comparing projections, properties and usage.  
 Technical entry level, with emphasis on readability, decent coloured images.
 
