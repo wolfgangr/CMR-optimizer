@@ -100,39 +100,41 @@ Ironically, just to find that in 3.5 out of 4 CRS families, the algorithm **does
 So all successful optimisation is a variant of `parse_points_to_fit_laea.pl`.  
 Actually, as a simple diff may reveal, descendants essentially are a bare copy, complemented by minor modification to allow for different parameter syntax of different CRS. And some ballast of variable names referring to CRS - that begs to be thrown overboard on the very first refacturing.
 
-## code walkthrough
+## Code walkthrough
 
 So let's document `parse_points_to_fit_laea.pl` as the template.  
-The first 16 lines comprise dreaded perl 'syntactic sugar' or include external libraries.  
+The first 16 lines comprise dreaded perl 'syntactic sugar' and include external libraries.  
 Most of them are documented in CPAN. Most of them are available in debian trixie repo.
 
-The least square algorithm `PDL::Fit::Levmar` ist the only exception, that has to be built by CPAN / CPANM. As I found during testing, It ist missing linalg dependency, restricting usable features. still on TBD....
+The `PERL` binding to the least square algorithm [PDL::Fit::Levmar](https://metacpan.org/dist/PDL-Fit-Levmar/view/levmar.pd) is the only exception, that has to be built by `CPAN` / `CPANM`. As I found during testing, it ist missing `linalg` dependency, restricting usable features.  
+Among them [FIX](https://metacpan.org/dist/PDL-Fit-Levmar/view/levmar.pd#FIX), which might come handy for a more flexible parametrization of the process.
 
 Constant Pi and 'WGS 84' as standard frame of reference close the prelude.
 
-The dreaded `PERL` 'diamond-operator' `<>` reads the file supplied as first argument to the script line-by-line, supposed to be a *.points file as produced by QGIS-georeferencer. We are in early alphy, so there is only limited check for plausibility.    
-Some regexp, some # and dots printed to the console, and a bunch of csv lines splitted to an array of array-refs (aka 2D array), containing our map points.
+The famous `PERL` 'diamond-operator' `<>` reads the file supplied to the script as first command line argument line-by-line. It's supposed to be a `*.points` file as produced by QGIS-georeferencer. We are in early alpha, so there is only limited check for plausibility.    
+Parsing is performed by some regexp, some # and dots printed to the console, and a bunch of csv lines splitted to an array of array-refs (aka 2D array), containing our map points.
 
 In line 45, we rehash the array (python pro's might think of 'dictonary' instead), so we can add additional fields without keeping track of array indices.
 
-Line 55 ff extracts the CRS definition stored in WKT-syntax in the first line of our point file.  
-We instruct LibProj to map back our matching points from our preliminary CRS (considered as arbitrary aka close to irrelvant) back to plain lat/lon, as defined in $CRS_lat_lon. We store those tagged as 'lat' and 'lon' in our central structure aka `%d_hash`.
+Line 55 ff extracts the CRS definition stored in [WKT](https://en.wikipedia.org/wiki/Well-known_text_representation_of_coordinate_reference_systems)-syntax in the first line of our point file.  
+We instruct LibProj to map back our matching points from our preliminary CRS (considered as arbitrary aka close to irrelvant) back to plain lat/lon, as defined in $CRS_lat_lon. We store those tagged as 'lat' and 'lon' in our central data hash `%d_hash`.
 
-Line 71 ... 80 deliver some debug output essential for development, but nasty for usage. Gracefully ignoring the rules for structured programming, we surround it with some nasty "goto" to skip it - or to keep it by commenting out the goto-clause.
+Line 71 ... 80 deliver some debug output, surpassed in later application.
 
 Line 85 ... 107 collect and debug a couple of statistics for our matching points in lat/lon coordinate space.
 
-Line 111 is essential for **implementing a specific CRS**. Syntactically, it's a **template** to be reused by printf / **sprintf** widely known from C and other languages.  
-The following lines provide estimates referring to this CRS to be supplied to the least square optimizer. Just recall that these optimizer may just find local optima, but not transcede barriers to other realms of may be better global optima. So, the calculation of reasonable starting points might turn out as paramount for a successful search for "best CRS". In our pre-alpha-stage, we are happy to start our optimizer towards any result at all.
+Line 111 is essential for **implementing a specific CRS**. Syntactically, it's a **template** to be reused by well known printf / **sprintf** .
 
-Line 122 inserts the start value into proj syntax, and line 125 calculates eatimates in the estimated CRS for all match points.  
+The following lines provide estimates referring to this CRS to be supplied as start estimates to the least square optimizer. Recall that these optimizer may just find local optima, but can not transcede barriers to other realms of may be better global optima. So, the calculation of **reasonable starting points** might turn out as **paramount** for a successful search for "best CRS". In our pre-alpha-stage, we are happy to start our optimizer towards any result at all. Further development might focus on deliberate crafting and/or configurable computation of these starting values, presumably specific matching the pecularities of different types of CRS.
+
+Line 122 inserts the start value into proj syntax, and line 125 calculates estimated coordinates in the estimated CRS for all match points.  
 Employing the same patterns than above, we collect those estimates to our data hash. Any refacturing might try to separate the code from prameters, and provide reusable code for different scopes.  
 Line 158 ff performs the same calculations for match points in source raster.
 Line 180 ff performs the same calculations for match points after Helmert transform (or may be other transformation, e.g. higher degree polynomials, later on).
 
-197 ff is a similiar scheme of debug, written to be activated / deactivated by a simple comment in front of the `goto:`-line.
+197 ff: optional debug
 
-Line 214 ff convert our data to the matrix-based PDL as requied by our `levmar`- implementation of least square.  
+Line 214 ff convert our data to the matrix-based PDL as requied by our [`levmar`](https://metacpan.org/dist/PDL-Fit-Levmar/view/levmar.pd#OPTIONS)- implementation of least square.  
 In essence, we require four variables:
 - estimated start parameters
 - (empty) output of calculated co-ordinates
@@ -141,28 +143,43 @@ In essence, we require four variables:
 
 In 217, we fill our starting estimate based on statistics collected before. Detail may vary by CRS type selectecd.
 
-In 219 ff, we collapse the 2D-list of match points, each with two lat/lon coordinates, to a single 1D-Array as required by levmar. Take some time to settle the suspicion against this step.
+In 219 ff, we collapse the 2D-list of match points, each with two lat/lon coordinates, to a single 1D-Array as required by levmar. 
 
-Ln 236 appears to resemble a remnant of unlucky variable choice, dependent on CRS, to be optimized away on refacturing.
+Ln 236 resembles a remnant of unlucky variable choice, dependent on CRS, to be optimized away on refacturing.
 
-Ln 241 builds the callback for the levmar optimizer. This is where the core of our transformation goes.  
+Ln 241 builds the **callback** for the levmar optimizer. This is where the core of our transformation goes.  
 In ln 242, we start by reading the parameters as supplied by the optimizer in each iterative step.  
 In ln 245, we expand the parameters - semantically obscure to the optimizer - to menaingful variable names.
 Ln 246 converts radiant to degrees.
 
-Ln 247 crudely hacks rotation out of optimisation. (levmar recognizes zero derivative, i.e. changing rotation does not influence the result)  
+Ln 247 crudely **hacks rotation out** of optimisation. (levmar recognizes zero derivative, i.e. changing rotation does not influence the result)  
 To explore the issue, we might open this to a cmd line parameter.
 
-Ln 249 inserts the parameters per iteration into the CRS at hand, implemented as sprintf'able proj string.
+Ln 249 inserts the **parameters per iteration** into the **CRS at scrutiny**, implemented as sprintf'able proj string.
 
-Ln 253 establishes a proj-cs2cs-object, based on the parameters to the specific levmar iteration just running.  
-Ln 254 translates the flat list, provided by the iterator in P Dl format, into 'plain perl' 2D-List, with lat/lon for each point.  
+Ln 253 establishes a [proj-cs2cs](https://metacpan.org/pod/Geo::LibProj::cs2cs)-object, based on the parameters to the specific levmar iteration just running.  
+Ln 254 translates the flat list, provided by the iterator in PDL format, into 'plain perl' 2D-List, with lat/lon for each point.  
 Ln 255 calls the proj/cs2cs object to really perform the transformation, based ion the inputs and parameters given so far.  
 Ln 256 removes the irrelevant z-coordinates supplied in previous steps, just to avoid trouble later on.
 
-Ln 228 ff implements a reverse helmert transformation (as I hope) in PDL matrix location.  
-Since we get weird effects 
-========== oh f... running out of concentration for this night .... ==================
+Ln 258 ff implements a **reverse helmert** transformation (as I hope) in PDL matrix implementation.  
+Since we have trouble with oscillating behaviour of rotation, spoiling conversion of the search, this part deserves further scrutiny.
+
+Ln 269 converts the 2D result to 1D as required by PDL::Fit::Levmar (see the remark below [example--7](https://metacpan.org/dist/PDL-Fit-Levmar/view/levmar.pd#example-7) in the docu)
+Ln 279 calls the levmar optimization, implementing the basic semantics of the [synposis]( https://metacpan.org/dist/PDL-Fit-Levmar/view/levmar.pd#SYNOPSIS), albeit using the more readable hash syntax explained in [options](https://metacpan.org/dist/PDL-Fit-Levmar/view/levmar.pd#OPTIONS).
+
+
+## Where to go from here
+For my own current needs, I can live with the current crude experimental status.  
+For the usage of a larger audience, one might consider
+
+- rewrite the whole thing in python
+- combine different CRS families into one single script
+- supply some parameters as command line options
+- integrate the workflow in QGIS georeferencer
+- or maintain skd of extended georeferencer as QGIS plugin
+
+
 
 
 
