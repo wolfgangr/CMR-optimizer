@@ -1,6 +1,6 @@
 ## Why?
 
-This Repo ist companion to [QGIS issue #64501:](https://github.com/qgis/QGIS/issues/64501)  
+This repo ist companion to [QGIS issue #64501:](https://github.com/qgis/QGIS/issues/64501)  
 **Estimate Target CRS type and parameters in Georeferencer** #64501
 
 When I was working on the **georeferencing** of scanned maps from **historical atlases**, I found it difficult to **identify** the correct **target** coordinate system aka **CRS**.
@@ -23,7 +23,12 @@ Unfortunately, **most atlases** I found **do not explicitly reveal the CRS** typ
 
 So the core **idea** of this repo is to employ the **least square** mechanism probably implemented in the QGIS georeferencer anyway **to estimate type and parameter of the target CRS**.  
 
-I'd expected that this were a challenge completed long ago. So before filing above mentioned qgis github issue, I **searched** the documentation of qgis, the plugin manager, proj and the common internet to avoid reinventing the wheel - but to **no avail**. As of writing, QGIS core team reports to be focussed to "Release 4.X". I saw little hope to expect some asap solution to my feature request. Perfect time to help yourself ;-) . 
+I'd expected that this were a challenge completed long ago. So before filing above mentioned qgis github issue, I **searched** the documentation of qgis, the plugin manager, proj and the common internet to avoid reinventing the wheel - but to **no avail**. As of writing, QGIS core team reports to be focussed to "Release 4.X". I saw little hope to expect some asap solution to my feature request. 
+
+Perfect time to help yourself ;-) . 
+
+The rest of this README.md focuses on the algorithm and programming issues.  
+In the [images](./images) subdirectory, a test run ist documented visually. They are commented in a separate README.md, elaborating on the geometrical aspects of the task.
 
 ## Data flow
 
@@ -47,7 +52,7 @@ Assumptions:
 - we consider our **SOURCE RASTER** (2) as given, with quality **beyond our influence**
 - established **QGIS georeferencing optimizes** paramters for the **transformation** to align the source raster to an intermediary geotiff file, which is associated (maybe documented in exif inside) to a defined **target CRS** (as a property of said geotiff)
 - transformation function and target CRS allow the assesment of **matching error** for any points (expressed as pixel error in source raster space)
-- in QGIS georeferencer, the **transformation** is **optimized** by some iterative algorithm minimizing **least square** error sum of the matching points (loop closing above (3))
+- in current QGIS georeferencer, the **transformation** is **optimized** by some iterative algorithm minimizing **least square** error sum of the matching points (loop closing above (3))
 - in the extension **proposed here**, **target CRS** is **optimised**  (dottted loop, closing below (3))  by least square **as well** - together or maybe in iterative interactive search with raster alignment transformation
 
 ## Choice of Platform
@@ -55,17 +60,21 @@ Assumptions:
 I know that `QGIS` essentially is a `python` project. But my experience is still well trained in `PERL` .  
 Preliminary research suggested and experience confimed that most of the critical tasks ist performed by `libproj` and some generic least square optimizer (`levmar in the light of PERL resources`). Both libraries are available in `python` as well. Maybe, in numpy / scipy there are even better implementations of least square available.  
 
+For `libproj`, there are several PERL bindings around. I opted for [Geo::LibProj::cs2cs](https://metacpan.org/pod/Geo::LibProj::cs2cs), which - in contrast to older wrappers, interface to installed proj (Rel. 9.6.0 in my case) by standard input/output streams. 
+
 `levmar` in `PERL` interfaces in `PDL` aka 'PERL data language' variables - an implementation of matrix calculus, allegedly competing on par with frameworks such as `matlab` or `octave`. Look for `python` equivalents in the realms of `sciPy` and/or `numpy`.
 
 The rest is "glue code" - simple craftswork. It was quite clear that a first proof of concept would require complete refacturing anyway. Tedious qgis and GUI integration is beyond the scope of a proof of concept, anyway.
+
+Project was done on a `debian trixie` workstation.
 
 ## Maturity and usability
 
 During develoment, it turned out that the integration in the **georeferencer's GUI is not that paramount** than initially expected.  
 The **scripts** in this directory can be **run** from console **against some `points` file** produced by the georeferencer without even closing the georeferencer UI.  
 The CRS and parameters given can simply entered as **custom CRS in the georeferencer** transformation window.  
-Point match errors are updated on the fly then, not even requiring a gdal run to produce a transformed geotiff.  
-An **iterative interactive workflow** (limited to the CRS covered by my scripts) is already **possible**.  
+Point match errors are updated on the fly then, not even requiring a gdal run to produce a transformed geotiff or loading the result to QGIS main window.  
+Thus, an **iterative interactive workflow** (limited to the CRS covered by my scripts) is already **possible**.  
 
 There is no configuration scheme yet - any **changes** are to made in the **source**.  
 A particular **quirk** is the refusal of the algorithm to converge at helmert **rotation**.  
@@ -86,17 +95,17 @@ It comments a couple of images collected during the development of the scripts a
 
 ## Code genalogy
 
-The current crude alpha hack at hand implements every family of CRS in different script, referred to by its name.
+The current crude alpha hack at hand implements every family of CRS in a different script, referred to by its name.
 
 Drafting started with `parse_points_to_fit_eqdc.pl`.  
 I assumed **rotation** in helmert to be **collinear** with **conical lon_0** in conical projections.
 So, this code was written with transformation code restricted to **shift/scale** - still in **plain perl**.
 
-The next step was `parse_points_to_fit_laea.pl`. I expected rotation as a essential degree of freedom, to be allowed to move for a perfect fit for a CRS to be optimized.  
-Assuming that matrix calculus was the proper way to implement this, `levmar` forcing matrix PDL interface, `proj` threatening severe performance penalties on repeted pointwise calls, and PDL was on my "nice-to-be-learned"-list anyway, I **rewrote** the whole chain **to matrix PDL**.
+The next step was `parse_points_to_fit_laea.pl`. For azimuthal projections, I expected rotation as an essential degree of freedom, to be allowed to move for a perfect fit for a CRS to be optimized.  
+Assuming that matrix calculus was the proper way to implement this, `levmar` forcing matrix PDL interface, `proj` threatening severe performance penalties on repeated pointwise calls, and PDL was on my "nice-to-be-learned"-list anyway, I **rewrote** reverse helmert **to matrix PDL**.
 
 Ironically, just to find that in 3.5 out of 4 CRS families, the algorithm **does not converge on rotation**. Further scrutiny is still on the TBD-List.  
-(Yes, I remember one successful convergence on rotation, but have to admit that I can't reconstruct the details any more)...   
+_(Yes, I remember one successful convergence on rotation, but have to admit that I can't reconstruct the details any more)..._   
 So all successful optimisation is a variant of `parse_points_to_fit_laea.pl`.  
 Actually, as a simple diff may reveal, descendants essentially are a bare copy, complemented by minor modification to allow for different parameter syntax of different CRS. And some ballast of variable names referring to CRS - that begs to be thrown overboard on the very first refacturing.
 
@@ -104,20 +113,20 @@ Actually, as a simple diff may reveal, descendants essentially are a bare copy, 
 
 So let's document `parse_points_to_fit_laea.pl` as the template.  
 The first 16 lines comprise dreaded perl 'syntactic sugar' and include external libraries.  
-Most of them are documented in CPAN. Most of them are available in debian trixie repo.
+Most (all?) of them are documented in `CPAN`. Most of them are available in `debian trixie` repo.
 
 The `PERL` binding to the least square algorithm [PDL::Fit::Levmar](https://metacpan.org/dist/PDL-Fit-Levmar/view/levmar.pd) is the only exception, that has to be built by `CPAN` / `CPANM`. As I found during testing, it ist missing `linalg` dependency, restricting usable features.  
 Among them [FIX](https://metacpan.org/dist/PDL-Fit-Levmar/view/levmar.pd#FIX), which might come handy for a more flexible parametrization of the process.
 
-Constant Pi and 'WGS 84' as standard frame of reference close the prelude.
+Constant `Pi` and `WGS 84` as standard frame of reference close the prelude.
 
 The famous `PERL` 'diamond-operator' `<>` reads the file supplied to the script as first command line argument line-by-line. It's supposed to be a `*.points` file as produced by QGIS-georeferencer. We are in early alpha, so there is only limited check for plausibility.    
-Parsing is performed by some regexp, some # and dots printed to the console, and a bunch of csv lines splitted to an array of array-refs (aka 2D array), containing our map points.
+Parsing is performed by some regexp, some # and dots debug-printed to the console, and a bunch of csv lines splitted to an array of array-refs (aka 2D array), containing our map points.
 
 In line 45, we rehash the array (python pro's might think of 'dictonary' instead), so we can add additional fields without keeping track of array indices.
 
 Line 55 ff extracts the CRS definition stored in [WKT](https://en.wikipedia.org/wiki/Well-known_text_representation_of_coordinate_reference_systems)-syntax in the first line of our point file.  
-We instruct LibProj to map back our matching points from our preliminary CRS (considered as arbitrary aka close to irrelvant) back to plain lat/lon, as defined in $CRS_lat_lon. We store those tagged as 'lat' and 'lon' in our central data hash `%d_hash`.
+We instruct [LibProj](https://metacpan.org/pod/Geo::LibProj::cs2cs) to map back our matching points from our preliminary CRS (considered as arbitrary aka close to irrelvant) back to plain lat/lon, as defined in $CRS_lat_lon. We store those tagged as 'lat' and 'lon' in our point list `%d_hash`.
 
 Line 71 ... 80 deliver some debug output, surpassed in later application.
 
