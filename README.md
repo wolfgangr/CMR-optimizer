@@ -132,6 +132,50 @@ Line 180 ff performs the same calculations for match points after Helmert transf
 
 197 ff is a similiar scheme of debug, written to be activated / deactivated by a simple comment in front of the `goto:`-line.
 
+Line 214 ff convert our data to the matrix-based PDL as requied by our `levmar`- implementation of least square.  
+In essence, we require four variables:
+- estimated start parameters
+- (empty) output of calculated co-ordinates
+- target array towards the co-ordinates are supposed to head to
+- the function to be applied to the ordinates to yield our co-ordinates
+
+In 217, we fill our starting estimate based on statistics collected before. Detail may vary by CRS type selectecd.
+
+In 219 ff, we collapse the 2D-list of match points, each with two lat/lon coordinates, to a single 1D-Array as required by levmar. Take some time to settle the suspicion against this step.
+
+Ln 236 appears to resemble a remnant of unlucky variable choice, dependent on CRS, to be optimized away on refacturing.
+
+Ln 241 builds the callback for the levmar optimizer. This is where the core of our transformation goes.  
+In ln 242, we start by reading the parameters as supplied by the optimizer in each iterative step.  
+In ln 245, we expand the parameters - semantically obscure to the optimizer - to menaingful variable names.
+Ln 246 converts radiant to degrees.
+
+Ln 247 crudely hacks rotation out of optimisation. (levmar recognizes zero derivative, i.e. changing rotation does not influence the result)  
+To explore the issue, we might open this to a cmd line parameter.
+
+Ln 249 inserts the parameters per iteration into the CRS at hand, implemented as sprintf'able proj string.
+
+Ln 253 establishes a proj-cs2cs-object, based on the parameters to the specific levmar iteration just running.  
+Ln 254 translates the flat list, provided by the iterator in P Dl format, into 'plain perl' 2D-List, with lat/lon for each point.  
+Ln 255 calls the proj/cs2cs object to really perform the transformation, based ion the inputs and parameters given so far.  
+Ln 256 removes the irrelevant z-coordinates supplied in previous steps, just to avoid trouble later on.
+
+Ln 228 ff implements a reverse helmert transformation (as I hope) in PDL matrix location.  
+Since we get weird effects 
+========== oh f... running out of concentration for this night .... ==================
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
